@@ -6,10 +6,14 @@
 
 @section('content')
 
+@php $bolehInput = in_array(auth()->user()->role->name, ['Waka Humas', 'Admin']); @endphp
+
 <div class="card card-pad">
   <div class="card-head">
     <div><h2>Data Mitra Industri</h2><div class="sub">{{ $partners->count() }} mitra terdaftar</div></div>
+    @if ($bolehInput)
     <button class="btn btn-primary btn-sm" onclick="openModal('modalMitra')">+ Tambah Mitra / Ajukan Kerja Sama</button>
+    @endif
   </div>
 
   <div class="filter-bar">
@@ -181,11 +185,61 @@
         @endforelse
       </div>
       <div class="modal-foot">
+        @if ($bolehInput)
+          <button type="button" class="btn btn-primary" onclick="closeModal('modalLihat{{ $partner->id }}'); openModal('modalPerpanjang{{ $partner->id }}')">+ Ajukan Dokumen Baru / Perpanjang</button>
+        @endif
         <button type="button" class="btn btn-ghost" onclick="closeModal('modalLihat{{ $partner->id }}')">Tutup</button>
       </div>
     </div>
   </div>
 @endforeach
+
+{{-- ================= MODAL AJUKAN DOKUMEN BARU / PERPANJANG (per mitra) ================= --}}
+@if ($bolehInput)
+@foreach ($partners as $partner)
+  @php
+    $terakhir = $partner->documents->sortByDesc('berlaku_selesai')->first();
+    $mulaiDefault = $terakhir ? $terakhir->berlaku_selesai->copy()->addDay()->format('Y-m-d') : now()->format('Y-m-d');
+  @endphp
+  <div class="modal-overlay" id="modalPerpanjang{{ $partner->id }}">
+    <div class="modal-card" style="max-width:600px;">
+      <form method="POST" action="{{ route('mitra-industri.dokumen.store', $partner->id) }}" enctype="multipart/form-data">
+        @csrf
+        <div class="modal-head">
+          <h2>Ajukan Dokumen Baru &mdash; {{ $partner->nama_perusahaan }}</h2>
+          <button type="button" class="modal-close" onclick="closeModal('modalPerpanjang{{ $partner->id }}')">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="hint" style="margin-bottom:14px;">Untuk perpanjangan MoU atau dokumen kerja sama baru dengan mitra ini. Pengajuan akan melewati 3 tahap persetujuan lagi.</div>
+          <div class="field-row">
+            <div class="field">
+              <label>Jenis Dokumen</label>
+              <select name="jenis_dokumen">
+                @foreach (['MoU', 'PKS', 'MoA'] as $jenis)
+                  <option value="{{ $jenis }}" {{ optional($terakhir)->jenis_dokumen === $jenis ? 'selected' : '' }}>{{ $jenis }}</option>
+                @endforeach
+              </select>
+            </div>
+            <div class="field"><label>Ruang Lingkup</label><input type="text" name="ruang_lingkup" value="{{ optional($terakhir)->ruang_lingkup }}" placeholder="mis. Guru tamu, PKL"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Berlaku Mulai</label><input type="date" name="berlaku_mulai" value="{{ $mulaiDefault }}" required></div>
+            <div class="field"><label>Berlaku Sampai</label><input type="date" name="berlaku_selesai" required></div>
+          </div>
+          <div class="field">
+            <label>Dokumen <span class="hint">(PDF, opsional)</span></label>
+            <input type="file" name="dokumen" accept=".pdf">
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('modalPerpanjang{{ $partner->id }}')">Batal</button>
+          <button type="submit" class="btn btn-primary">Ajukan Verifikasi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+@endforeach
+@endif
 
 @endsection
 
@@ -194,5 +248,12 @@
   function openModal(id){ document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
   function closeModal(id){ document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
   document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id)); } });
+
+  // Dibuka otomatis dari dashboard Humas: /mitra-industri?perpanjang={id mitra}
+  @if (request()->filled('perpanjang'))
+    document.addEventListener('DOMContentLoaded', () => {
+      if (document.getElementById('modalPerpanjang{{ (int) request('perpanjang') }}')) openModal('modalPerpanjang{{ (int) request('perpanjang') }}');
+    });
+  @endif
 </script>
 @endsection

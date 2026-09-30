@@ -34,7 +34,7 @@ class IncomingLetterController extends Controller
         $letters = $query->paginate(8)->withQueryString();
 
         $selected = $request->filled('surat')
-            ? IncomingLetter::with(['dispositions.assignee'])->findOrFail($request->query('surat'))
+            ? IncomingLetter::with(['dispositions.assigned'])->findOrFail($request->query('surat'))
             : $letters->first();
 
         return view('surat-masuk.index', compact('letters', 'selected', 'status'));
@@ -98,6 +98,9 @@ class IncomingLetterController extends Controller
             $instruksiText .= ' — ' . $validated['catatan'];
         }
 
+        $terkirim = [];
+        $dilewati = [];
+
         foreach ($validated['tujuan'] as $namaRole) {
             $user = User::whereHas('role', fn ($q) => $q->where('name', $namaRole))->first();
 
@@ -108,11 +111,23 @@ class IncomingLetterController extends Controller
                     'status' => 'belum ditindaklanjuti',
                     'assigned_to' => $user->id,
                 ]);
+                $terkirim[] = $namaRole;
+            } else {
+                $dilewati[] = $namaRole;
             }
         }
 
+        if (empty($terkirim)) {
+            return back()->withErrors(['tujuan' => 'Belum ada user dengan role ' . implode(', ', $dilewati) . '. Buat user untuk role tersebut dulu.']);
+        }
+
+        $pesan = 'Disposisi berhasil dikirim ke: ' . implode(', ', $terkirim) . '.';
+        if (! empty($dilewati)) {
+            $pesan .= ' Dilewati karena belum ada user dengan role ini: ' . implode(', ', $dilewati) . '.';
+        }
+
         return redirect()->route('surat-masuk.index', ['surat' => $letter->id])
-            ->with('success', 'Disposisi berhasil dikirim.');
+            ->with('success', $pesan);
     }
 
     public function updateDispositionStatus(Request $request, Disposition $disposition)

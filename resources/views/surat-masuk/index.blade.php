@@ -6,6 +6,8 @@
 
 @section('content')
 
+@php $bolehKelola = in_array(auth()->user()->role->name, ['Koordinator TU', 'Admin']); @endphp
+
 <div class="two-pane">
 
   {{-- ================= DAFTAR SURAT ================= --}}
@@ -13,7 +15,9 @@
     <div class="card-pad" style="padding-bottom:0;">
       <div class="card-head">
         <h2>Daftar Surat Masuk</h2>
+        @if ($bolehKelola)
         <button class="btn btn-primary btn-sm" onclick="openModal('modalSuratMasuk')">+ Catat Surat Masuk</button>
+        @endif
       </div>
 
       <form method="GET" action="{{ route('surat-masuk.index') }}" style="margin-bottom:14px;">
@@ -78,7 +82,9 @@
       <div class="card card-pad">
         <div class="card-head">
           <h2>Detail Surat</h2>
+          @if ($bolehKelola)
           <button class="btn btn-ghost btn-sm" onclick="openModal('modalEditSurat')">Edit</button>
+          @endif
         </div>
         <div class="info-list">
           <div class="info-row"><span class="k">No. Agenda</span><span class="v mono">{{ $selected->no_agenda }}</span></div>
@@ -133,7 +139,7 @@
           <div class="field">
             <label>Diteruskan Kepada Sdr.</label>
             <div class="checkbox-grid">
-              @foreach (['Waka Kurikulum', 'Waka Kesiswaan', 'Waka Sapras', 'Waka Humas'] as $roleName)
+              @foreach (\App\Models\Disposition::ROLE_PENERIMA as $roleName)
                 <label class="checkbox-item">
                   <input type="checkbox" name="tujuan[]" value="{{ $roleName }}"> {{ $roleName }}
                 </label>

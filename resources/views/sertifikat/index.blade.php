@@ -3,6 +3,7 @@
 @section('title', 'Sertifikat PKL')
 @section('page-title', 'Sertifikat PKL')
 @section('breadcrumb', 'Waka Humas / Sertifikat PKL')
+@section('no-error-banner', '1')
 
 @section('content')
 

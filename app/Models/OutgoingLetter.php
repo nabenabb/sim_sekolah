@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class OutgoingLetter extends Model
 {
     protected $fillable = [
-        'no_surat', 'tanggal', 'tujuan', 'perihal', 'isi_ringkas',
+        'no_surat', 'tanggal', 'tujuan', 'perihal', 'isi_ringkas', 'jenis_template', 'data_template',
         'status', 'file_path', 'ref_incoming_letter_id', 'created_by', 'signed_by',
     ];
 
@@ -15,6 +15,7 @@ class OutgoingLetter extends Model
     {
         return [
             'tanggal' => 'date',
+            'data_template' => 'array',
         ];
     }
 

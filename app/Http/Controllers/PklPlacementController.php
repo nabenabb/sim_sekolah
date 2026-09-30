@@ -20,6 +20,14 @@ class PklPlacementController extends Controller
             $query->where('status', $status);
         }
 
+        if ($request->filled('q')) {
+            $keyword = $request->query('q');
+            $query->where(function ($w) use ($keyword) {
+                $w->whereHas('student', fn ($s) => $s->where('nama', 'like', "%{$keyword}%")->orWhere('nis', 'like', "%{$keyword}%"))
+                  ->orWhereHas('partner', fn ($pt) => $pt->where('nama_perusahaan', 'like', "%{$keyword}%"));
+            });
+        }
+
         if ($request->filled('jurusan')) {
             $query->whereHas('student', fn ($q) => $q->where('program_keahlian_id', $request->query('jurusan')));
         }

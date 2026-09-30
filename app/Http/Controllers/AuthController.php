@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -27,6 +27,10 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Email atau password salah'])->onlyInput('email');
         }
 
+        if (! $user->is_active) {
+            return back()->withErrors(['email' => 'Akun Anda telah dinonaktifkan. Hubungi Admin sekolah.'])->onlyInput('email');
+        }
+
         Auth::login($user);
 
         return match ($user->role->name) {
@@ -34,7 +38,6 @@ class AuthController extends Controller
             'Kepala Sekolah' => redirect()->route('dashboard.kepsek'),
             'Waka Humas' => redirect()->route('dashboard.humas'),
             default => redirect()->route('dashboard'),
-
         };
     }
 

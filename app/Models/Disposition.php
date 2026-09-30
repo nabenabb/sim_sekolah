@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Disposition extends Model
 {
-     protected $fillable = ['letter_id', 'instruksi', 'status', 'assigned_to'];
+    // Role yang bisa dipilih sebagai tujuan disposisi (satu sumber untuk form, rute, dan menu)
+    public const ROLE_PENERIMA = ['Waka Kurikulum', 'Waka Kesiswaan', 'Waka Sapras', 'Waka Humas'];
+
+    protected $fillable = ['letter_id', 'instruksi', 'status', 'assigned_to'];
 
     public function letter()
     {

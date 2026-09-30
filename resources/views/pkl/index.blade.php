@@ -3,6 +3,7 @@
 @section('title', 'Data Siswa PKL')
 @section('page-title', 'Data Siswa PKL')
 @section('breadcrumb', 'Waka Humas / Siswa PKL')
+@section('no-error-banner', '1')
 
 @section('content')
 

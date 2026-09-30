@@ -2,10 +2,15 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IncomingLetterController;
 use App\Http\Controllers\IndustryPartnerController;
+use App\Http\Controllers\MyDispositionController;
 use App\Http\Controllers\OutgoingLetterController;
 use App\Http\Controllers\PklPlacementController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\UserController;
+use App\Models\Disposition;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('login'));
@@ -17,20 +22,42 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::get('/verifikasi/{token}', [CertificateController::class, 'verify'])->name('sertifikat.verify');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard');
-    Route::get('/dashboard/tu', fn () => view('dashboard-tu'))->name('dashboard.tu');
-    Route::get('/dashboard/kepsek', fn () => view('dashboard-kepsek'))->name('dashboard.kepsek');
-    Route::get('/dashboard/humas', fn () => view('dashboard-humas'))->name('dashboard.humas');
+    // ---------- Dashboard ----------
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/tu', [DashboardController::class, 'tu'])->middleware('role:Koordinator TU,Admin')->name('dashboard.tu');
+    Route::get('/dashboard/kepsek', [DashboardController::class, 'kepsek'])->middleware('role:Kepala Sekolah,Admin')->name('dashboard.kepsek');
+    Route::get('/dashboard/humas', [DashboardController::class, 'humas'])->middleware('role:Waka Humas,Admin')->name('dashboard.humas');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // ---------- Fitur 2: Surat Masuk & Disposisi (TU & Admin) ----------
-    Route::middleware('role:Koordinator TU,Admin')->group(function () {
+    Route::get('/cari', [SearchController::class, 'index'])->name('cari.index');
+
+    // ---------- Manajemen Pengguna (khusus Admin) ----------
+    Route::middleware('role:Admin')->group(function () {
+        Route::get('/manajemen-pengguna', [UserController::class, 'index'])->name('manajemen-pengguna.index');
+        Route::post('/manajemen-pengguna', [UserController::class, 'store'])->name('manajemen-pengguna.store');
+        Route::put('/manajemen-pengguna/{user}', [UserController::class, 'update'])->name('manajemen-pengguna.update');
+        Route::patch('/manajemen-pengguna/{user}/reset-password', [UserController::class, 'resetPassword'])->name('manajemen-pengguna.resetPassword');
+        Route::patch('/manajemen-pengguna/{user}/toggle', [UserController::class, 'toggleActive'])->name('manajemen-pengguna.toggle');
+    });
+
+    // ---------- Fitur 2: Surat Masuk & Disposisi ----------
+    // Lihat + disposisi: TU, Admin, Kepala Sekolah
+    Route::middleware('role:Koordinator TU,Admin,Kepala Sekolah')->group(function () {
         Route::get('/surat-masuk', [IncomingLetterController::class, 'index'])->name('surat-masuk.index');
-        Route::post('/surat-masuk', [IncomingLetterController::class, 'store'])->name('surat-masuk.store');
-        Route::put('/surat-masuk/{letter}', [IncomingLetterController::class, 'update'])->name('surat-masuk.update');
         Route::post('/surat-masuk/{letter}/disposisi', [IncomingLetterController::class, 'storeDisposition'])->name('surat-masuk.disposisi.store');
         Route::patch('/disposisi/{disposition}/status', [IncomingLetterController::class, 'updateDispositionStatus'])->name('surat-masuk.disposisi.updateStatus');
+    });
+    // Catat & edit surat: hanya TU & Admin
+    Route::middleware('role:Koordinator TU,Admin')->group(function () {
+        Route::post('/surat-masuk', [IncomingLetterController::class, 'store'])->name('surat-masuk.store');
+        Route::put('/surat-masuk/{letter}', [IncomingLetterController::class, 'update'])->name('surat-masuk.update');
+    });
+
+    // Penerima disposisi (Waka) melihat & memperbarui disposisi miliknya sendiri
+    Route::middleware('role:' . implode(',', Disposition::ROLE_PENERIMA))->group(function () {
+        Route::get('/disposisi-saya', [MyDispositionController::class, 'index'])->name('disposisi-saya.index');
+        Route::patch('/disposisi-saya/{disposition}/status', [MyDispositionController::class, 'updateStatus'])->name('disposisi-saya.status');
     });
 
     // ---------- Fitur 3: Surat Keluar ----------
@@ -52,9 +79,10 @@ Route::middleware('auth')->group(function () {
     });
     Route::middleware('role:Waka Humas,Admin')->group(function () {
         Route::post('/mitra-industri', [IndustryPartnerController::class, 'store'])->name('mitra-industri.store');
+        Route::post('/mitra-industri/{partner}/dokumen', [IndustryPartnerController::class, 'storeDocument'])->name('mitra-industri.dokumen.store');
     });
 
-    // ---------- Fitur 5: Data Siswa PKL & Sertifikat (Waka Humas & Admin) ----------
+    // ---------- Fitur 5: Data Siswa PKL & Sertifikat ----------
     Route::middleware('role:Waka Humas,Admin')->group(function () {
         Route::get('/pkl', [PklPlacementController::class, 'index'])->name('pkl.index');
         Route::post('/pkl', [PklPlacementController::class, 'store'])->name('pkl.store');

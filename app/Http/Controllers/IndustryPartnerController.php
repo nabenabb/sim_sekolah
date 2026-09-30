@@ -15,6 +15,15 @@ class IndustryPartnerController extends Controller
     {
         $query = IndustryPartner::with(['programKeahlian', 'latestActiveDocument', 'documents.approvals.approver']);
 
+        if ($request->filled('q')) {
+            $keyword = $request->query('q');
+            $query->where(function ($w) use ($keyword) {
+                $w->where('nama_perusahaan', 'like', "%{$keyword}%")
+                  ->orWhere('bidang_usaha', 'like', "%{$keyword}%")
+                  ->orWhere('kontak_person', 'like', "%{$keyword}%");
+            });
+        }
+
         if ($request->filled('jurusan')) {
             $query->where('program_keahlian_id', $request->query('jurusan'));
         }
@@ -87,30 +96,61 @@ class IndustryPartnerController extends Controller
                 'program_keahlian_id' => $data['program_keahlian_id'],
             ]);
 
-            $filePath = $request->hasFile('dokumen')
-                ? $request->file('dokumen')->store('kerja-sama', 'public')
-                : null;
-
-            $document = PartnershipDocument::create([
-                'partner_id' => $partner->id,
-                'jenis_dokumen' => $data['jenis_dokumen'],
-                'ruang_lingkup' => $data['ruang_lingkup'] ?? null,
-                'berlaku_mulai' => $data['berlaku_mulai'],
-                'berlaku_selesai' => $data['berlaku_selesai'],
-                'file_dokumen' => $filePath,
-                'status' => 'diajukan',
-            ]);
-
-            foreach (array_keys(PartnershipApproval::TAHAP_ROLE) as $tahap) {
-                PartnershipApproval::create([
-                    'document_id' => $document->id,
-                    'tahap' => $tahap,
-                    'status' => 'menunggu',
-                ]);
-            }
+            $this->createDocument($partner, $data, $request);
         });
 
         return redirect()->route('mitra-industri.index')->with('success', 'Mitra & pengajuan kerja sama berhasil dikirim untuk verifikasi.');
+    }
+
+    // Ajukan dokumen baru / perpanjangan MoU untuk mitra yang SUDAH ada
+    public function storeDocument(Request $request, IndustryPartner $partner)
+    {
+        $data = $request->validate([
+            'jenis_dokumen' => 'required|in:MoU,PKS,MoA',
+            'ruang_lingkup' => 'nullable|string|max:255',
+            'berlaku_mulai' => 'required|date',
+            'berlaku_selesai' => 'required|date|after:berlaku_mulai',
+            'dokumen' => 'nullable|file|mimes:pdf|max:5120',
+        ]);
+
+        // Cegah pengajuan dobel selagi masih ada yang diproses
+        $masihBerjalan = $partner->documents()->whereIn('status', ['diajukan', 'diverifikasi'])->exists();
+        if ($masihBerjalan) {
+            return back()->withErrors(['perpanjang' => $partner->nama_perusahaan . ' masih punya pengajuan yang sedang diproses. Selesaikan dulu sebelum mengajukan yang baru.']);
+        }
+
+        DB::transaction(fn () => $this->createDocument($partner, $data, $request));
+
+        return redirect()->route('mitra-industri.index')
+            ->with('success', 'Pengajuan dokumen baru untuk ' . $partner->nama_perusahaan . ' dikirim untuk verifikasi.');
+    }
+
+    // Bikin dokumen + 3 tahap persetujuan (dipakai oleh store & storeDocument)
+    private function createDocument(IndustryPartner $partner, array $data, Request $request): PartnershipDocument
+    {
+        $filePath = $request->hasFile('dokumen')
+            ? $request->file('dokumen')->store('kerja-sama', 'public')
+            : null;
+
+        $document = PartnershipDocument::create([
+            'partner_id' => $partner->id,
+            'jenis_dokumen' => $data['jenis_dokumen'],
+            'ruang_lingkup' => $data['ruang_lingkup'] ?? null,
+            'berlaku_mulai' => $data['berlaku_mulai'],
+            'berlaku_selesai' => $data['berlaku_selesai'],
+            'file_dokumen' => $filePath,
+            'status' => 'diajukan',
+        ]);
+
+        foreach (array_keys(PartnershipApproval::TAHAP_ROLE) as $tahap) {
+            PartnershipApproval::create([
+                'document_id' => $document->id,
+                'tahap' => $tahap,
+                'status' => 'menunggu',
+            ]);
+        }
+
+        return $document;
     }
 
     public function decideApproval(Request $request, PartnershipApproval $approval)
