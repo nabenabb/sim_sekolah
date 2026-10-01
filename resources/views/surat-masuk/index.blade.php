@@ -83,7 +83,15 @@
         <div class="card-head">
           <h2>Detail Surat</h2>
           @if ($bolehKelola)
-          <button class="btn btn-ghost btn-sm" onclick="openModal('modalEditSurat')">Edit</button>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-ghost btn-sm" onclick="openModal('modalEditSurat')">Edit</button>
+            <form method="POST" action="{{ route('surat-masuk.destroy', $selected) }}"
+                  onsubmit="return confirm('Yakin hapus surat ini dari daftar? Data tidak hilang permanen dan bisa dipulihkan admin.')">
+              @csrf
+              @method('DELETE')
+              <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--danger);">Hapus</button>
+            </form>
+          </div>
           @endif
         </div>
         <div class="info-list">

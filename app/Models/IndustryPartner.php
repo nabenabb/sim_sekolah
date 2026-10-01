@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class IndustryPartner extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'nama_perusahaan', 'alamat_pusat', 'bidang_usaha',
         'kontak_person', 'no_telepon', 'status', 'program_keahlian_id',

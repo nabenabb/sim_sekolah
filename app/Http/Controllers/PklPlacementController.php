@@ -107,4 +107,17 @@ class PklPlacementController extends Controller
 
         return redirect()->route('pkl.index')->with('success', 'Penempatan PKL dibatalkan.');
     }
+
+    public function destroy(PklPlacement $placement)
+    {
+        if (! in_array(auth()->user()->role->name, ['Admin', 'Waka Humas'])) {
+            abort(403, 'Akses ditolak');
+        }
+
+        // Soft delete penempatan saja — sertifikat terkait tetap ada (opsi A)
+        $placement->delete();
+
+        return redirect()->route('pkl.index')
+            ->with('success', 'Data penempatan PKL berhasil dihapus dari daftar.');
+    }
 }

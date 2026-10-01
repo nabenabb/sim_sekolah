@@ -58,6 +58,15 @@
                 <a class="link-more" href="{{ route('sertifikat.index', ['placement' => $p->id]) }}">Sertifikat</a>
               @endif
             @endif
+            @if (in_array(auth()->user()->role->name, ['Admin', 'Waka Humas']))
+              &nbsp;·&nbsp;
+              <form method="POST" action="{{ route('pkl.destroy', $p) }}" style="display:inline;"
+                    onsubmit="return confirm('Yakin hapus data PKL ini dari daftar? Sertifikat terkait tetap tersimpan.')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="link-more" style="background:none;border:none;padding:0;cursor:pointer;color:var(--danger);">Hapus</button>
+              </form>
+            @endif
           </td>
         </tr>
       @empty
@@ -103,14 +112,24 @@
 
         <div class="field-row">
           <div class="field">
-            <label>Siswa</label>
-            <select name="student_id" required>
+            <label>Siswa
+              <a href="{{ route('siswa.index') }}" style="font-size:11.5px;font-weight:500;margin-left:6px;color:var(--primary);">+ Kelola data siswa</a>
+            </label>
+            <input type="text" id="cariSiswa" placeholder="Ketik nama atau NIS untuk filter…"
+                   style="width:100%;border:1px solid var(--border-strong);border-radius:var(--radius-control);padding:8px 12px;font:inherit;font-size:13px;background:var(--surface-sunken);margin-bottom:6px;">
+            <select name="student_id" id="selectSiswa" required size="6"
+                    style="width:100%;border:1px solid var(--border-strong);border-radius:var(--radius-control);padding:6px;font:inherit;font-size:13px;background:var(--surface-sunken);">
               @forelse ($students as $s)
-                <option value="{{ $s->id }}" {{ old('student_id') == $s->id ? 'selected' : '' }}>{{ $s->nama }} &mdash; NIS {{ $s->nis }}</option>
+                <option value="{{ $s->id }}"
+                        data-text="{{ strtolower($s->nama . ' ' . $s->nis) }}"
+                        {{ old('student_id') == $s->id ? 'selected' : '' }}>
+                  {{ $s->nama }} — NIS {{ $s->nis }}@if($s->programKeahlian) ({{ $s->programKeahlian->nama_jurusan }})@endif
+                </option>
               @empty
-                <option value="">Belum ada siswa yang tersedia</option>
+                <option value="">Belum ada siswa tersedia — tambah di Data Siswa dulu</option>
               @endforelse
             </select>
+            <div class="hint" style="margin-top:4px;">Hanya siswa yang tidak sedang PKL aktif yang ditampilkan.</div>
           </div>
           <div class="field">
             <label>Industri Tujuan</label>
@@ -194,6 +213,23 @@
     </div>
   </div>
 @endforeach
+
+
+<script>
+(function(){
+  const cari = document.getElementById('cariSiswa');
+  const sel = document.getElementById('selectSiswa');
+  if (!cari || !sel) return;
+  cari.addEventListener('input', function(){
+    const q = this.value.toLowerCase().trim();
+    Array.from(sel.options).forEach(function(opt){
+      if (!opt.value) { opt.hidden = false; return; }
+      const text = (opt.getAttribute('data-text') || opt.textContent).toLowerCase();
+      opt.hidden = q !== '' && !text.includes(q);
+    });
+  });
+})();
+</script>
 
 @endsection
 

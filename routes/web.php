@@ -9,7 +9,9 @@ use App\Http\Controllers\MyDispositionController;
 use App\Http\Controllers\OutgoingLetterController;
 use App\Http\Controllers\PklPlacementController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\StudentController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\LaporanController;
 use App\Models\Disposition;
 use Illuminate\Support\Facades\Route;
 
@@ -52,6 +54,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:Koordinator TU,Admin')->group(function () {
         Route::post('/surat-masuk', [IncomingLetterController::class, 'store'])->name('surat-masuk.store');
         Route::put('/surat-masuk/{letter}', [IncomingLetterController::class, 'update'])->name('surat-masuk.update');
+        Route::delete('/surat-masuk/{letter}', [IncomingLetterController::class, 'destroy'])->name('surat-masuk.destroy');
     });
 
     // Penerima disposisi (Waka) melihat & memperbarui disposisi miliknya sendiri
@@ -67,6 +70,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:Koordinator TU,Admin')->group(function () {
         Route::post('/surat-keluar', [OutgoingLetterController::class, 'store'])->name('surat-keluar.store');
         Route::put('/surat-keluar/{letter}', [OutgoingLetterController::class, 'update'])->name('surat-keluar.update');
+        Route::delete('/surat-keluar/{letter}', [OutgoingLetterController::class, 'destroy'])->name('surat-keluar.destroy');
     });
     Route::middleware('role:Kepala Sekolah')->group(function () {
         Route::post('/surat-keluar/{letter}/sign', [OutgoingLetterController::class, 'sign'])->name('surat-keluar.sign');
@@ -80,17 +84,31 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:Waka Humas,Admin')->group(function () {
         Route::post('/mitra-industri', [IndustryPartnerController::class, 'store'])->name('mitra-industri.store');
         Route::post('/mitra-industri/{partner}/dokumen', [IndustryPartnerController::class, 'storeDocument'])->name('mitra-industri.dokumen.store');
+        Route::delete('/mitra-industri/{partner}', [IndustryPartnerController::class, 'destroy'])->name('mitra-industri.destroy');
+        Route::delete('/mitra-industri/dokumen/{document}', [IndustryPartnerController::class, 'destroyDocument'])->name('mitra-industri.dokumen.destroy');
     });
 
-    // ---------- Fitur 5: Data Siswa PKL & Sertifikat ----------
+    // ---------- Fitur 5: Data Siswa (master) + PKL & Sertifikat ----------
     Route::middleware('role:Waka Humas,Admin')->group(function () {
+        Route::get('/siswa', [StudentController::class, 'index'])->name('siswa.index');
+        Route::post('/siswa', [StudentController::class, 'store'])->name('siswa.store');
+        Route::put('/siswa/{siswa}', [StudentController::class, 'update'])->name('siswa.update');
+        Route::delete('/siswa/{siswa}', [StudentController::class, 'destroy'])->name('siswa.destroy');
+
         Route::get('/pkl', [PklPlacementController::class, 'index'])->name('pkl.index');
         Route::post('/pkl', [PklPlacementController::class, 'store'])->name('pkl.store');
         Route::post('/pkl/{placement}/selesai', [PklPlacementController::class, 'complete'])->name('pkl.complete');
         Route::post('/pkl/{placement}/batal', [PklPlacementController::class, 'cancel'])->name('pkl.cancel');
+        Route::delete('/pkl/{placement}', [PklPlacementController::class, 'destroy'])->name('pkl.destroy');
 
         Route::get('/sertifikat', [CertificateController::class, 'index'])->name('sertifikat.index');
         Route::post('/sertifikat', [CertificateController::class, 'store'])->name('sertifikat.store');
         Route::get('/sertifikat/{certificate}/unduh', [CertificateController::class, 'download'])->name('sertifikat.download');
+        Route::delete('/sertifikat/{certificate}', [CertificateController::class, 'destroy'])->name('sertifikat.destroy');
+    });
+
+    // ---------- Fitur 6: Laporan ----------
+    Route::middleware('role:Admin,Kepala Sekolah,Koordinator TU,Waka Humas')->group(function () {
+        Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
     });
 });

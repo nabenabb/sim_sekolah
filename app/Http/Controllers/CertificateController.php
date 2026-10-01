@@ -125,4 +125,16 @@ class CertificateController extends Controller
 
         return $dompdf->output();
     }
+
+    public function destroy(Certificate $certificate)
+    {
+        if (! in_array(auth()->user()->role->name, ['Admin', 'Waka Humas'])) {
+            abort(403, 'Akses ditolak');
+        }
+
+        $certificate->delete();
+
+        return redirect()->route('sertifikat.index')
+            ->with('success', 'Sertifikat berhasil dihapus dari daftar.');
+    }
 }

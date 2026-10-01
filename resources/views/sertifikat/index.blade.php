@@ -94,6 +94,15 @@
             <a class="link-more" href="{{ route('sertifikat.download', $c->id) }}">Unduh PDF</a>
             &nbsp;·&nbsp;
             <a class="link-more" href="{{ route('sertifikat.verify', $c->qr_code) }}" target="_blank">Halaman Verifikasi</a>
+            @if (in_array(auth()->user()->role->name, ['Admin', 'Waka Humas']))
+              &nbsp;·&nbsp;
+              <form method="POST" action="{{ route('sertifikat.destroy', $c) }}" style="display:inline;"
+                    onsubmit="return confirm('Yakin hapus sertifikat ini dari daftar?')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="link-more" style="background:none;border:none;padding:0;cursor:pointer;color:var(--danger);">Hapus</button>
+              </form>
+            @endif
           </td>
         </tr>
       @empty

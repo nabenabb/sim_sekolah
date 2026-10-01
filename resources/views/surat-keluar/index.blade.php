@@ -55,6 +55,15 @@
                 <button type="submit" class="link-more" style="background:none;border:none;padding:0;cursor:pointer;color:var(--success);">Tandatangani</button>
               </form>
             @endif
+            @if (in_array(auth()->user()->role->name, ['Admin', 'Koordinator TU']))
+              &nbsp;·&nbsp;
+              <form method="POST" action="{{ route('surat-keluar.destroy', $letter) }}" style="display:inline;"
+                    onsubmit="return confirm('Yakin hapus surat keluar ini dari daftar?')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="link-more" style="background:none;border:none;padding:0;cursor:pointer;color:var(--danger);">Hapus</button>
+              </form>
+            @endif
           </td>
         </tr>
       @empty

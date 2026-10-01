@@ -212,4 +212,16 @@ class OutgoingLetterController extends Controller
 
         $letter->update(['file_path' => $path]);
     }
+
+    public function destroy(OutgoingLetter $letter)
+    {
+        if (! in_array(auth()->user()->role->name, ['Admin', 'Koordinator TU'])) {
+            abort(403, 'Akses ditolak');
+        }
+
+        $letter->delete();
+
+        return redirect()->route('surat-keluar.index')
+            ->with('success', 'Surat keluar berhasil dihapus dari daftar.');
+    }
 }

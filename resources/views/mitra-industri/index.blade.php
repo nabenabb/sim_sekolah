@@ -43,7 +43,18 @@
           <td>{{ $partner->programKeahlian->nama_jurusan ?? '—' }}</td>
           <td class="mono">{{ $doc ? $doc->berlaku_selesai->translatedFormat('d M Y') : '—' }}</td>
           <td><span class="pill {{ $partner->computed_status['pill'] }}"><span class="dot"></span>{{ $partner->computed_status['label'] }}</span></td>
-          <td><a class="link-more" href="#" onclick="openModal('modalLihat{{ $partner->id }}');return false;">Lihat</a></td>
+          <td style="white-space:nowrap;">
+            <a class="link-more" href="#" onclick="openModal('modalLihat{{ $partner->id }}');return false;">Lihat</a>
+            @if (in_array(auth()->user()->role->name, ['Admin', 'Waka Humas']))
+              &nbsp;·&nbsp;
+              <form method="POST" action="{{ route('mitra-industri.destroy', $partner) }}" style="display:inline;"
+                    onsubmit="return confirm('Yakin hapus mitra {{ $partner->nama_perusahaan }} dari daftar? Dokumen terkait tetap tersimpan.')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="link-more" style="background:none;border:none;padding:0;cursor:pointer;color:var(--danger);">Hapus</button>
+              </form>
+            @endif
+          </td>
         </tr>
       @empty
         <tr><td colspan="6" style="text-align:center;color:var(--ink-faint);padding:24px;">Belum ada mitra industri.</td></tr>
@@ -66,6 +77,7 @@
       <div class="approval-item" style="border:1px solid var(--border);border-radius:var(--radius-card);padding:16px 18px;">
         <div class="spread" style="margin-bottom:10px;">
           <div><b>{{ $doc->partner->nama_perusahaan }}</b> &mdash; {{ $doc->jenis_dokumen }}
+            @if ($doc->nomor_dokumen)<span class="mono" style="font-size:11.5px;color:var(--ink-soft);"> · {{ $doc->nomor_dokumen }}</span>@endif
             <div class="cell-sub">Diajukan {{ $doc->created_at->translatedFormat('d M Y') }}</div>
           </div>
           <span class="pill pill-warning"><span class="dot"></span>{{ $tahapSekarang->tahap ?? 'Selesai' }}</span>
@@ -136,8 +148,9 @@
               <option value="MoA">MoA</option>
             </select>
           </div>
-          <div class="field"><label>Ruang Lingkup</label><input type="text" name="ruang_lingkup" placeholder="mis. Guru tamu, PKL"></div>
+          <div class="field"><label>Nomor Dokumen</label><input type="text" name="nomor_dokumen" placeholder="mis. 001/MoU/SMKN4/2026"></div>
         </div>
+        <div class="field"><label>Ruang Lingkup</label><input type="text" name="ruang_lingkup" placeholder="mis. Guru tamu, PKL"></div>
         <div class="field-row">
           <div class="field"><label>Berlaku Mulai</label><input type="date" name="berlaku_mulai" required></div>
           <div class="field"><label>Berlaku Sampai</label><input type="date" name="berlaku_selesai" required></div>
@@ -174,10 +187,19 @@
         <h3 style="font-size:14px;margin:20px 0 10px;">Riwayat Dokumen Kerja Sama</h3>
         @forelse ($partner->documents as $doc)
           <div class="info-row">
-            <span class="k">{{ $doc->jenis_dokumen }} <span class="mono" style="font-size:11px;">{{ $doc->berlaku_mulai->format('d/m/y') }}&ndash;{{ $doc->berlaku_selesai->format('d/m/y') }}</span></span>
+            <span class="k">{{ $doc->jenis_dokumen }}@if($doc->nomor_dokumen) <span class="mono" style="font-size:11px;">({{ $doc->nomor_dokumen }})</span>@endif <span class="mono" style="font-size:11px;">{{ $doc->berlaku_mulai->format('d/m/y') }}&ndash;{{ $doc->berlaku_selesai->format('d/m/y') }}</span></span>
             <span class="v">
               @if ($doc->file_dokumen)<a class="link-more" href="{{ asset('storage/'.$doc->file_dokumen) }}" target="_blank">Lihat file</a> &middot; @endif
               {{ ucfirst($doc->status) }}
+              @if (in_array(auth()->user()->role->name, ['Admin', 'Waka Humas']))
+                &middot;
+                <form method="POST" action="{{ route('mitra-industri.dokumen.destroy', $doc) }}" style="display:inline;"
+                      onsubmit="return confirm('Yakin hapus dokumen ini dari daftar?')">
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit" class="link-more" style="background:none;border:none;padding:0;cursor:pointer;color:var(--danger);font-size:12px;">Hapus</button>
+                </form>
+              @endif
             </span>
           </div>
         @empty
@@ -220,8 +242,9 @@
                 @endforeach
               </select>
             </div>
-            <div class="field"><label>Ruang Lingkup</label><input type="text" name="ruang_lingkup" value="{{ optional($terakhir)->ruang_lingkup }}" placeholder="mis. Guru tamu, PKL"></div>
+            <div class="field"><label>Nomor Dokumen</label><input type="text" name="nomor_dokumen" value="{{ optional($terakhir)->nomor_dokumen }}" placeholder="mis. 001/MoU/SMKN4/2026"></div>
           </div>
+          <div class="field"><label>Ruang Lingkup</label><input type="text" name="ruang_lingkup" value="{{ optional($terakhir)->ruang_lingkup }}" placeholder="mis. Guru tamu, PKL"></div>
           <div class="field-row">
             <div class="field"><label>Berlaku Mulai</label><input type="date" name="berlaku_mulai" value="{{ $mulaiDefault }}" required></div>
             <div class="field"><label>Berlaku Sampai</label><input type="date" name="berlaku_selesai" required></div>

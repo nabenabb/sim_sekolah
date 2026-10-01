@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PartnershipDocument extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
-        'partner_id', 'jenis_dokumen', 'ruang_lingkup', 'berlaku_mulai',
+        'partner_id', 'jenis_dokumen', 'nomor_dokumen', 'ruang_lingkup', 'berlaku_mulai',
         'berlaku_selesai', 'file_dokumen', 'status',
     ];
 

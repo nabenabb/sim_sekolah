@@ -15,6 +15,7 @@
   $penerimaRoles = \App\Models\Disposition::ROLE_PENERIMA;
   $mitraRoles = ['Waka Humas', 'Kepala Program Keahlian', 'Kepala Sekolah', 'Admin'];
   $pklRoles = ['Waka Humas', 'Admin'];
+  $laporanRoles = ['Admin', 'Kepala Sekolah', 'Koordinator TU', 'Waka Humas'];
 @endphp
 <div class="app">
   <aside class="sidebar">
@@ -45,13 +46,19 @@
           <a class="nav-item {{ request()->routeIs('mitra-industri*') ? 'active' : '' }}" href="{{ route('mitra-industri.index') }}"><span class="ic">&#9672;</span><span>Mitra & Kerja Sama Industri</span></a>
         @endif
         @if ($canSee($pklRoles))
-          <a class="nav-item {{ request()->routeIs('pkl*') ? 'active' : '' }}" href="{{ route('pkl.index') }}"><span class="ic">&#9673;</span><span>Data Siswa PKL</span></a>
+          <a class="nav-item {{ request()->routeIs('siswa*') ? 'active' : '' }}" href="{{ route('siswa.index') }}"><span class="ic">&#9642;</span><span>Data Siswa</span></a>
+          <a class="nav-item {{ request()->routeIs('pkl*') ? 'active' : '' }}" href="{{ route('pkl.index') }}"><span class="ic">&#9673;</span><span>Penempatan PKL</span></a>
         @endif
       @endif
 
       @if ($canSee($pklRoles))
         <div class="nav-label">SERTIFIKAT</div>
         <a class="nav-item {{ request()->routeIs('sertifikat*') ? 'active' : '' }}" href="{{ route('sertifikat.index') }}"><span class="ic">&#9639;</span><span>Sertifikat PKL</span></a>
+      @endif
+
+      @if ($canSee($laporanRoles))
+        <div class="nav-label">LAPORAN</div>
+        <a class="nav-item {{ request()->routeIs('laporan*') ? 'active' : '' }}" href="{{ route('laporan.index') }}"><span class="ic">&#9638;</span><span>Laporan</span></a>
       @endif
 
       @if ($roleName === 'Admin')

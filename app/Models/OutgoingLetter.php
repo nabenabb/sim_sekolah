@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OutgoingLetter extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'no_surat', 'tanggal', 'tujuan', 'perihal', 'isi_ringkas', 'jenis_template', 'data_template',
         'status', 'file_path', 'ref_incoming_letter_id', 'created_by', 'signed_by',

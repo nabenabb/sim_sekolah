@@ -6,6 +6,7 @@ use App\Models\Disposition;
 use App\Models\IncomingLetter;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class IncomingLetterController extends Controller
 {
@@ -140,5 +141,18 @@ class IncomingLetterController extends Controller
 
         return redirect()->route('surat-masuk.index', ['surat' => $disposition->letter_id])
             ->with('success', 'Status disposisi diperbarui.');
+    }
+
+    public function destroy(IncomingLetter $letter)
+    {
+        if (! in_array(auth()->user()->role->name, ['Admin', 'Koordinator TU'])) {
+            abort(403, 'Akses ditolak');
+        }
+
+        // Soft delete saja — disposisi & file tetap di DB/storage (opsi A)
+        $letter->delete();
+
+        return redirect()->route('surat-masuk.index')
+            ->with('success', 'Surat masuk berhasil dihapus dari daftar.');
     }
 }

@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PklPlacement extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'student_id', 'partner_id', 'pembimbing_id', 'pembimbing_industri',
         'tanggal_mulai', 'tanggal_selesai', 'status', 'nilai', 'surat_permohonan',

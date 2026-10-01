@@ -79,6 +79,7 @@ class IndustryPartnerController extends Controller
             'kontak_person' => 'required|string|max:100',
             'no_telepon' => 'nullable|string|max:30',
             'jenis_dokumen' => 'required|in:MoU,PKS,MoA',
+            'nomor_dokumen' => 'nullable|string|max:100',
             'ruang_lingkup' => 'nullable|string|max:255',
             'berlaku_mulai' => 'required|date',
             'berlaku_selesai' => 'required|date|after:berlaku_mulai',
@@ -107,6 +108,7 @@ class IndustryPartnerController extends Controller
     {
         $data = $request->validate([
             'jenis_dokumen' => 'required|in:MoU,PKS,MoA',
+            'nomor_dokumen' => 'nullable|string|max:100',
             'ruang_lingkup' => 'nullable|string|max:255',
             'berlaku_mulai' => 'required|date',
             'berlaku_selesai' => 'required|date|after:berlaku_mulai',
@@ -135,6 +137,7 @@ class IndustryPartnerController extends Controller
         $document = PartnershipDocument::create([
             'partner_id' => $partner->id,
             'jenis_dokumen' => $data['jenis_dokumen'],
+            'nomor_dokumen' => $data['nomor_dokumen'] ?? null,
             'ruang_lingkup' => $data['ruang_lingkup'] ?? null,
             'berlaku_mulai' => $data['berlaku_mulai'],
             'berlaku_selesai' => $data['berlaku_selesai'],
@@ -184,5 +187,30 @@ class IndustryPartnerController extends Controller
         }
 
         return redirect()->route('mitra-industri.index')->with('success', 'Keputusan tahap "'.$approval->tahap.'" berhasil disimpan.');
+    }
+
+    public function destroy(IndustryPartner $partner)
+    {
+        if (! in_array(auth()->user()->role->name, ['Admin', 'Waka Humas'])) {
+            abort(403, 'Akses ditolak');
+        }
+
+        // Soft delete mitra saja — dokumen terkait tetap di DB (opsi A)
+        $partner->delete();
+
+        return redirect()->route('mitra-industri.index')
+            ->with('success', 'Mitra industri berhasil dihapus dari daftar.');
+    }
+
+    public function destroyDocument(PartnershipDocument $document)
+    {
+        if (! in_array(auth()->user()->role->name, ['Admin', 'Waka Humas'])) {
+            abort(403, 'Akses ditolak');
+        }
+
+        $document->delete();
+
+        return redirect()->route('mitra-industri.index')
+            ->with('success', 'Dokumen kerja sama berhasil dihapus dari daftar.');
     }
 }

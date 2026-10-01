@@ -173,6 +173,7 @@ class DashboardController extends Controller
             'menungguVerifikasi' => $menungguVerifikasi,
             'siswaPkl' => (clone $pklAktif)->count(),
             'mitraPkl' => (clone $pklAktif)->distinct()->count('partner_id'),
+            'disposisiSaya' => Disposition::where('assigned_to', auth()->id())->where('status', '!=', 'selesai')->count(),
         ]);
     }
 
