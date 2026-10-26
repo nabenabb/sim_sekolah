@@ -5,31 +5,32 @@
 <title>Sertifikat PKL {{ $nomor }}</title>
 <style>
   @page { margin: 0; }
-  body { margin: 0; font-family: 'DejaVu Sans', sans-serif; color: #10253D; }
-  .frame { margin: 20px; border: 3px solid #143B61; padding: 4px; }
-  .frame-inner { min-height: 500px; border: 1px solid #D6A51D; padding: 18px 34px 14px; }
-  .center { text-align: center; }
-  table.head { width: 100%; border-collapse: collapse; }
-  table.head td { vertical-align: middle; }
-  .logo-cell { width: 88px; text-align: center; }
-  .logo { width: 68px; height: 68px; object-fit: contain; }
-  .school { font-size: 10px; letter-spacing: 1.2px; color: #14406B; font-weight: bold; }
-  .title { font-size: 30px; font-weight: bold; color: #14406B; margin: 4px 0 0; letter-spacing: 2px; }
-  .subtitle { font-size: 11px; letter-spacing: 1.5px; color: #52677C; font-weight: bold; }
-  .bar { width: 92px; height: 3px; background: #D6A51D; margin: 11px auto 12px; }
-  .lead { font-size: 12px; color: #5B6B7D; margin: 0; }
-  .name { font-size: 25px; font-weight: bold; margin: 5px 0; color: #10253D; }
-  .sub { font-size: 11px; color: #52677C; margin: 0; }
-  .body-text { font-size: 12px; line-height: 1.55; margin: 10px auto 0; width: 90%; }
-  table.meta { margin: 11px auto 0; font-size: 10.5px; border-collapse: collapse; }
-  table.meta td { padding: 3px 10px; text-align: left; }
-  table.meta td.k { color: #52677C; }
-  table.foot { width: 100%; margin-top: 12px; border-collapse: collapse; }
-  table.foot td { vertical-align: bottom; font-size: 10px; }
-  .sign-space { height: 36px; }
-  .mono { font-family: 'DejaVu Sans Mono', monospace; font-size: 9px; color: #5B6B7D; }
-  .qr { width: 66px; height: 66px; }
-  .number { font-size: 9px; font-weight: bold; color: #143B61; }
+  body { margin: 0; color: #111; font-family: 'DejaVu Sans', sans-serif; }
+  .certificate { position: fixed; top: 9px; right: 9px; bottom: 9px; left: 9px; overflow: hidden; border: 2px solid #202b34; background: #fff; }
+  .corner-top { position: absolute; top: 0; right: 0; width: 0; height: 0; border-top: 300px solid #12b6da; border-left: 300px solid transparent; }
+  .corner-top-light { position: absolute; top: 0; right: 0; width: 0; height: 0; border-top: 205px solid #a8e9f3; border-left: 205px solid transparent; }
+  .corner-bottom { position: absolute; bottom: 0; left: 0; width: 0; height: 0; border-bottom: 220px solid #12b6da; border-right: 220px solid transparent; }
+  .corner-bottom-light { position: absolute; bottom: 0; left: 0; width: 0; height: 0; border-bottom: 145px solid #a8e9f3; border-right: 145px solid transparent; }
+  .watermark { position: absolute; top: 260px; left: 50%; width: 245px; height: 245px; margin-left: -122px; opacity: .10; }
+  .logo { position: absolute; top: 44px; width: 112px; height: 112px; object-fit: contain; }
+  .logo-left { left: 74px; }
+  .logo-right { right: 74px; }
+  .title { position: absolute; top: 28px; left: 0; width: 100%; text-align: center; font-family: 'DejaVu Serif', serif; font-size: 76px; line-height: 1.2; }
+  .number { position: absolute; top: 126px; left: 0; width: 100%; text-align: center; font-family: 'DejaVu Serif', serif; font-size: 19px; }
+  .recipient { position: absolute; top: 180px; left: 90px; right: 90px; text-align: center; }
+  .lead { margin: 0 0 18px; font-size: 20px; }
+  .student-name { margin: 0 0 28px; font-family: 'DejaVu Serif', serif; font-size: 38px; font-style: italic; }
+  table.details { margin: 0 auto 20px; font-size: 18px; border-collapse: collapse; }
+  table.details td { padding: 3px 8px; text-align: left; }
+  .award { max-width: 790px; margin: 22px auto 0; font-size: 17px; line-height: 1.45; }
+  .signature { position: absolute; top: 545px; left: 4%; right: 4%; width: 92%; border-collapse: collapse; }
+  .signature td { width: 40%; vertical-align: top; text-align: center; font-size: 15px; line-height: 1.45; }
+  .signature td.qr-cell { width: 20%; vertical-align: middle; }
+  .sign-space { height: 72px; }
+  .sign-name { font-weight: bold; text-decoration: underline; }
+  .nip { margin-top: 14px; }
+  .qr { width: 62px; height: 62px; }
+  .qr-note { font-size: 9px; }
 </style>
 </head>
 <body>
@@ -37,58 +38,52 @@
   $student = $placement->student;
   $tanggalMulai = $placement->tanggal_mulai->locale('id')->translatedFormat('d F Y');
   $tanggalSelesai = $placement->tanggal_selesai->locale('id')->translatedFormat('d F Y');
+  $tanggalLahir = $student->tanggal_lahir?->locale('id')->translatedFormat('d F Y') ?? '-';
 @endphp
-<div class="frame">
-  <div class="frame-inner">
-    <table class="head"><tr>
-      <td class="logo-cell"><img class="logo" src="{{ $logoProvinsi }}" alt="Lambang Provinsi Kepulauan Riau"></td>
-      <td class="center">
-        <div class="school">PEMERINTAH PROVINSI KEPULAUAN RIAU</div>
-        <div class="school" style="margin-top:3px;">SMK NEGERI 4 TANJUNGPINANG</div>
-        <div class="title">SERTIFIKAT</div>
-        <div class="subtitle">PRAKTIK KERJA LAPANGAN</div>
-      </td>
-      <td class="logo-cell"><img class="logo" src="{{ $logoSekolah }}" alt="Lambang SMK Negeri 4 Tanjungpinang"></td>
-    </tr></table>
-    <div class="bar"></div>
-    <div class="center">
-      <p class="lead">Diberikan kepada</p>
-      <p class="name">{{ $student->nama }}</p>
-      <p class="sub">NIS {{ $student->nis }} | {{ $student->programKeahlian->nama_jurusan ?? '-' }}</p>
-      <p class="body-text">
-        Telah menyelesaikan Praktik Kerja Lapangan di <b>{{ $placement->partner->nama_perusahaan }}</b>
-        dengan baik pada periode <b>{{ $tanggalMulai }} sampai {{ $tanggalSelesai }}</b>.
-      </p>
-      <table class="meta">
-        <tr><td class="k">Nilai akhir</td><td>:</td><td><b>{{ rtrim(rtrim(number_format($placement->nilai, 2, ',', '.'), '0'), ',') }}</b></td></tr>
-        <tr><td class="k">Predikat</td><td>:</td><td><b>{{ $placement->nilai >= 85 ? 'Sangat Baik' : ($placement->nilai >= 75 ? 'Baik' : ($placement->nilai >= 60 ? 'Cukup' : 'Kurang')) }}</b></td></tr>
-      </table>
-    </div>
+<div class="certificate">
+  <div class="corner-top"></div><div class="corner-top-light"></div>
+  <div class="corner-bottom"></div><div class="corner-bottom-light"></div>
+  <img class="watermark" src="{{ $logoProvinsi }}" alt="">
+  <img class="logo logo-left" src="{{ $logoProvinsi }}" alt="Lambang Provinsi Kepulauan Riau">
+  <img class="logo logo-right" src="{{ $logoSekolah }}" alt="Lambang SMK Negeri 4 Tanjungpinang">
 
-    <table class="foot">
-      <tr>
-        <td style="width:22%;">
-          <img class="qr" src="{{ $qrDataUri }}" alt="QR verifikasi"><br>
-          <span class="number">{{ $nomor }}</span>
-        </td>
-        <td style="width:26%;" class="center">
-          Pembimbing Industri
-          <div class="sign-space"></div>
-          <b><u>{{ $placement->pembimbing_industri ?: '........................................' }}</u></b>
-        </td>
-        <td style="width:26%;" class="center">
-          Mengetahui,<br>Kepala SMK Negeri 4 Tanjungpinang<br>
-          <div class="sign-space"></div>
-          <b><u>{{ $namaKepsek }}</u></b>
-        </td>
-        <td style="width:26%;" class="center">
-          Tanjungpinang, {{ $tanggalTerbit->locale('id')->translatedFormat('d F Y') }}<br>
-          Pindai QR untuk verifikasi<br>
-          <span class="mono">Dokumen elektronik resmi</span>
-        </td>
-      </tr>
+  <div class="title">Sertifikat</div>
+  <div class="number">Nomor: {{ $nomor }}</div>
+
+  <div class="recipient">
+    <p class="lead">Diberikan Kepada</p>
+    <p class="student-name">{{ $student->nama }}</p>
+    <table class="details">
+      <tr><td>Nomor Induk Siswa</td><td>:</td><td>{{ $student->nis }}</td></tr>
+      <tr><td>Tempat / Tgl. Lahir</td><td>:</td><td>{{ $student->tempat_lahir ? $student->tempat_lahir . ' / ' . $tanggalLahir : $tanggalLahir }}</td></tr>
+      <tr><td>Konsentrasi Keahlian</td><td>:</td><td>{{ $student->programKeahlian->nama_jurusan ?? '-' }}</td></tr>
     </table>
+    <p class="award">
+      Telah selesai mengikuti Praktik Kerja Lapangan (PKL) pada<br>
+      <b>{{ $placement->partner->nama_perusahaan }}</b> dengan predikat <b>{{ $placement->predikat() }}</b>,
+      pada {{ $tanggalMulai }} sampai {{ $tanggalSelesai }}.
+    </p>
   </div>
+
+  <table class="signature">
+    <tr>
+      <td>
+        KEPALA<br>SMK NEGERI 4 TANJUNGPINANG
+        <div class="sign-space"></div>
+        <div class="sign-name">{{ $namaKepsek }}</div>
+        <div class="nip">NIP ................................</div>
+      </td>
+      <td class="qr-cell">
+        <img class="qr" src="{{ $qrDataUri }}" alt="QR verifikasi"><br>
+        <span class="qr-note">Pindai untuk verifikasi</span>
+      </td>
+      <td>
+        PEMBIMBING INDUSTRI<br>{{ $placement->partner->nama_perusahaan }}
+        <div class="sign-space"></div>
+        <div class="sign-name">{{ $placement->pembimbing_industri ?: '........................................' }}</div>
+      </td>
+    </tr>
+  </table>
 </div>
 </body>
 </html>

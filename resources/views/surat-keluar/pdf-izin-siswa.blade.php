@@ -5,19 +5,19 @@
 <title>{{ $surat->no_surat }}</title>
 <style>
   @page { margin: 20mm 24mm 18mm; }
-  body { margin: 0; color: #172B40; font-family: 'DejaVu Sans', sans-serif; font-size: 11px; line-height: 1.6; }
+  body { margin: 0; color: #111; font-family: 'DejaVu Serif', serif; font-size: 12pt; line-height: 1.5; }
   table.kop { width: 100%; border-collapse: collapse; }
   table.kop td { vertical-align: middle; }
   .logo-cell { width: 66px; text-align: center; }
   .logo { width: 54px; height: 54px; object-fit: contain; }
-  .kop-text { text-align: center; }
-  .kop-text .t1 { font-size: 8.5px; letter-spacing: .5px; }
-  .kop-text .t2 { margin-top: 1px; font-size: 10px; font-weight: bold; letter-spacing: .7px; }
-  .kop-text .t3 { margin-top: 2px; color: #123D63; font-size: 14px; font-weight: bold; }
-  .kop-text .t4 { margin-top: 3px; color: #52677C; font-size: 7.5px; line-height: 1.4; }
+  .kop-text { text-align: center; font-family: 'DejaVu Serif', serif; color: #111; }
+  .kop-text .t1 { font-size: 12px; font-weight: bold; }
+  .kop-text .t2 { margin-top: 2px; font-size: 13px; font-weight: bold; }
+  .kop-text .t3 { margin-top: 2px; font-size: 17px; font-weight: bold; }
+  .kop-text .t4 { margin-top: 3px; font-size: 9.5px; line-height: 1.4; }
   .kop-line { border-bottom: 2px solid #173F66; border-top: 1px solid #173F66; margin-top: 8px; height: 2px; }
   .kop-line-thin { display: none; }
-  .judul { margin: 25px 0 4px; color: #123D63; font-size: 16px; font-weight: bold; letter-spacing: .8px; text-align: center; }
+  .judul { margin: 25px 0 4px; color: #123D63; font-family: 'DejaVu Serif', serif; font-size: 16px; font-weight: bold; letter-spacing: .8px; text-align: center; }
   .nomor { margin-bottom: 21px; color: #52677C; font-size: 10px; text-align: center; }
   .kanan { margin: 0 0 17px; text-align: right; }
   .intro { margin-bottom: 16px; text-align: justify; }

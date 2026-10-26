@@ -59,7 +59,7 @@
     <div style="border-radius:12px;overflow:hidden;border:1px solid var(--border);">
       <div style="background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff;padding:20px 22px;display:flex;justify-content:space-between;align-items:center;">
         <div><div style="font-size:11.5px;color:#9FB6CC;">SMKN 4 Tanjungpinang</div><div style="font-family:'Plus Jakarta Sans';font-weight:800;font-size:15px;margin-top:3px;">Sertifikat Praktik Kerja Lapangan</div></div>
-        <div style="width:40px;height:40px;border-radius:50%;background:var(--accent);color:#3A2C00;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;">S4</div>
+        <img src="{{ asset('images/logo-smkn4-tanjungpinang.png') }}" alt="Logo SMKN 4 Tanjungpinang" style="width:40px;height:40px;object-fit:contain;">
       </div>
       <div style="padding:20px 22px;background:#fff;">
         <div class="info-row"><span class="k">Nama</span><span class="v" id="p-nama">—</span></div>

@@ -10,7 +10,7 @@
 <div style="max-width:520px;margin:0 auto;padding:32px 18px;">
 
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
-    <div class="brand-mark">S4</div>
+    <img class="brand-logo" src="{{ asset('images/logo-smkn4-tanjungpinang.png') }}" alt="Logo SMKN 4 Tanjungpinang">
     <div>
       <div style="font-weight:800;font-size:15px;">SIM Sekolah</div>
       <div style="font-size:12px;color:var(--ink-faint);">SMKN 4 Tanjungpinang &middot; Verifikasi Sertifikat</div>

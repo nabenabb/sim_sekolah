@@ -5,16 +5,16 @@
 <title>{{ $surat->no_surat }}</title>
 <style>
   @page { margin: 20mm 23mm 18mm; }
-  body { margin: 0; color: #172B40; font-family: 'DejaVu Sans', sans-serif; font-size: 10.5px; line-height: 1.55; }
+  body { margin: 0; color: #111; font-family: 'DejaVu Serif', serif; font-size: 12pt; line-height: 1.45; }
   table.kop { width: 100%; border-collapse: collapse; }
   table.kop td { vertical-align: middle; }
   .logo-cell { width: 70px; text-align: center; }
   .logo { width: 58px; height: 58px; object-fit: contain; }
-  .kop-text { text-align: center; }
-  .kop-text .t1 { font-size: 8.5px; letter-spacing: .5px; }
-  .kop-text .t2 { margin-top: 1px; font-size: 10px; font-weight: bold; letter-spacing: .7px; }
-  .kop-text .t3 { margin-top: 2px; color: #123D63; font-size: 14px; font-weight: bold; letter-spacing: .4px; }
-  .kop-text .t4 { margin-top: 3px; color: #52677C; font-size: 7.5px; line-height: 1.4; }
+  .kop-text { text-align: center; font-family: 'DejaVu Serif', serif; color: #111; }
+  .kop-text .t1 { font-size: 12px; font-weight: bold; }
+  .kop-text .t2 { margin-top: 2px; font-size: 13px; font-weight: bold; }
+  .kop-text .t3 { margin-top: 2px; font-size: 17px; font-weight: bold; }
+  .kop-text .t4 { margin-top: 3px; font-size: 9.5px; line-height: 1.4; }
   .kop-line { border-bottom: 2px solid #173F66; border-top: 1px solid #173F66; margin-top: 8px; height: 2px; }
   .kop-line-thin { display: none; }
   .tanggal { text-align: right; margin: 17px 0 12px; }
@@ -23,10 +23,9 @@
   table.meta td.label { width: 65px; }
   table.meta td.titik { width: 12px; }
   .isi p { margin: 0 0 9px; text-align: justify; }
-  table.jadwal { width: 88%; margin: 8px auto 13px; border-collapse: collapse; background: #F5F8FB; }
-  table.jadwal td { padding: 5px 8px; border-bottom: 1px solid #DCE5EE; vertical-align: top; }
-  table.jadwal tr:last-child td { border-bottom: 0; }
-  table.jadwal td.label { width: 92px; color: #52677C; }
+  table.jadwal { width: 88%; margin: 10px auto 14px; border-collapse: collapse; }
+  table.jadwal td { padding: 2px 8px; vertical-align: top; }
+  table.jadwal td.label { width: 120px; }
   table.jadwal td.titik { width: 10px; }
   table.ttd { width: 100%; margin-top: 20px; border-collapse: collapse; }
   table.ttd td { vertical-align: top; }
@@ -72,6 +71,7 @@
     {{ $data['lokasi_tujuan'] ?? 'Tanjungpinang' }}
   </p>
 
+  <p>Dengan hormat,</p>
   <p>{!! nl2br(e($data['pembuka'] ?? $surat->isi_ringkas ?? '')) !!}</p>
 
   <table class="jadwal">
@@ -87,7 +87,7 @@
   <tr>
     <td style="width:60%;"></td>
     <td style="width:40%;text-align:center;">
-      Mengetahui,<br>{{ $data['jabatan_kepsek'] ?? 'Kepala SMK Negeri 4 Tanjungpinang' }}
+      {{ $data['jabatan_kepsek'] ?? 'Kepala Sekolah,' }}
       <div class="ttd-space"></div>
       <b><u>{{ $namaKepsek }}</u></b><br>
       NIP {{ $data['nip_kepsek'] ?? '................................' }}

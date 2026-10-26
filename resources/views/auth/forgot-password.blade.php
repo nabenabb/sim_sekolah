@@ -9,7 +9,7 @@
 <body>
 <div class="auth-shell">
   <div class="auth-side">
-    <div class="brand" style="border:none;padding:0;"><div class="brand-mark">S4</div><div class="brand-text"><div class="t1">SIM Sekolah</div><div class="t2" style="color:#8FA6BC;">SMKN 4 Tanjungpinang</div></div></div>
+    <div class="brand" style="border:none;padding:0;"><img class="brand-logo" src="{{ asset('images/logo-smkn4-tanjungpinang.png') }}" alt="Logo SMKN 4 Tanjungpinang"><div class="brand-text"><div class="t1">SIM Sekolah</div><div class="t2" style="color:#8FA6BC;">SMKN 4 Tanjungpinang</div></div></div>
     <div><div class="quote">Atur ulang kata sandi akun Anda melalui email sekolah yang terdaftar.</div></div>
     <div style="font-size:12px;color:#6C87A0;">&copy; {{ date('Y') }} SMKN 4 Tanjungpinang</div>
   </div>

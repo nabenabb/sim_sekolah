@@ -5,17 +5,17 @@
 <title>{{ $surat->no_surat }}</title>
 <style>
   @page { margin: 22mm 24mm 20mm; }
-  body { margin: 0; color: #172B40; font-family: 'DejaVu Sans', sans-serif; font-size: 11px; line-height: 1.65; }
+  body { margin: 0; color: #111; font-family: 'DejaVu Serif', serif; font-size: 12pt; line-height: 1.5; }
   table { border-collapse: collapse; }
   .letterhead { width: 100%; }
   .letterhead td { vertical-align: middle; }
   .logo-cell { width: 74px; text-align: center; }
   .logo { width: 62px; height: 62px; object-fit: contain; }
-  .school { text-align: center; }
-  .school .province { font-size: 9px; letter-spacing: .6px; }
-  .school .office { margin-top: 1px; font-size: 10px; font-weight: bold; letter-spacing: .7px; }
-  .school .name { margin-top: 2px; color: #123D63; font-size: 15px; font-weight: bold; letter-spacing: .5px; }
-  .school .address { margin-top: 3px; color: #52677C; font-size: 8px; line-height: 1.45; }
+  .school { text-align: center; font-family: 'DejaVu Serif', serif; color: #111; }
+  .school .province { font-size: 12px; font-weight: bold; }
+  .school .office { margin-top: 2px; font-size: 13px; font-weight: bold; }
+  .school .name { margin-top: 2px; font-size: 17px; font-weight: bold; }
+  .school .address { margin-top: 3px; font-size: 9.5px; line-height: 1.4; }
   .rule { margin-top: 9px; border-top: 2px solid #173F66; border-bottom: 1px solid #173F66; height: 2px; }
   .place-date { margin: 22px 0 15px; text-align: right; }
   .meta { width: auto; margin-bottom: 22px; }
@@ -67,7 +67,7 @@
 <p class="closing">Demikian surat ini kami sampaikan. Atas perhatian dan kerja sama yang baik, kami ucapkan terima kasih.</p>
 
 <table class="signature"><tr><td></td><td class="signer">
-  Tanjungpinang,<br>{{ $data['jabatan_kepsek'] ?? 'Kepala SMK Negeri 4 Tanjungpinang' }}
+  Tanjungpinang,<br>{{ $data['jabatan_kepsek'] ?? 'Kepala Sekolah' }}
   <div class="signature-space"></div>
   <strong><u>{{ $namaKepsek }}</u></strong><br>
   NIP {{ $data['nip_kepsek'] ?? '................................' }}

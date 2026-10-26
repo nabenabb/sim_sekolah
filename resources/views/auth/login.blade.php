@@ -10,7 +10,7 @@
 <div class="auth-shell">
   <div class="auth-side">
     <div class="brand" style="border:none;padding:0;">
-      <div class="brand-mark">S4</div>
+      <img class="login-brand-logo" src="{{ asset('images/logo-smkn4-login.jpg') }}" alt="Logo SMKN 4 Tanjungpinang">
       <div class="brand-text"><div class="t1">SIM Sekolah</div><div class="t2" style="color:#8FA6BC;">SMKN 4 Tanjungpinang</div></div>
     </div>
     <div>

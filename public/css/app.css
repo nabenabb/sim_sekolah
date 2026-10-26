@@ -106,6 +106,14 @@ button{ font-family: inherit; }
   object-fit:contain;
   flex:none;
 }
+.login-brand-logo{
+  width:42px;
+  height:42px;
+  object-fit:cover;
+  border-radius:10px;
+  background:#fff;
+  flex:none;
+}
 .brand-text{ line-height:1.25; }
 .brand-text .t1{ font-family:'Plus Jakarta Sans'; font-weight:700; font-size:14px; color:#fff; }
 .brand-text .t2{ font-size:11px; color:#7E97AF; }
