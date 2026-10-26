@@ -12,6 +12,7 @@ use BaconQrCode\Writer;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -23,7 +24,7 @@ class CertificateController extends Controller
         $eligible = PklPlacement::with(['student.programKeahlian', 'partner'])
             ->where('status', 'selesai')
             ->whereNotNull('nilai')
-            ->whereDoesntHave('certificate')
+            ->whereDoesntHave('certificate', fn ($q) => $q->withTrashed())
             ->get();
 
         $issued = Certificate::with(['placement.student', 'placement.partner'])
@@ -48,11 +49,17 @@ class CertificateController extends Controller
             return back()->withErrors(['placement_id' => 'PKL siswa ini belum selesai / belum ada nilai.']);
         }
 
-        if ($placement->certificate) {
-            return back()->withErrors(['placement_id' => 'Sertifikat untuk penempatan ini sudah pernah diterbitkan.']);
+        // placement_id pada sertifikat bersifat unik, jadi sertifikat yang sudah dihapus (di Sampah)
+        // tetap dianggap ada: arahkan ke pemulihan, bukan terbit ulang.
+        $sudahAda = Certificate::withTrashed()->where('placement_id', $placement->id)->first();
+        if ($sudahAda) {
+            $pesan = $sudahAda->trashed()
+                ? 'Sertifikat untuk penempatan ini sudah dihapus dan ada di Sampah. Minta Admin memulihkannya, bukan menerbitkan ulang.'
+                : 'Sertifikat untuk penempatan ini sudah pernah diterbitkan.';
+            return back()->withErrors(['placement_id' => $pesan]);
         }
 
-        $nomor = $this->nextNomor();
+        $nomor = $this->allocateNomor();
         $token = Str::random(40);
         $verifyUrl = route('sertifikat.verify', $token);
 
@@ -64,10 +71,12 @@ class CertificateController extends Controller
             'tanggalTerbit' => now(),
             'qrDataUri' => 'data:image/svg+xml;base64,' . base64_encode($this->makeQrSvg($verifyUrl)),
             'namaKepsek' => $kepalaSekolah->name ?? '______________________',
+            'logoProvinsi' => $this->logoDataUri('logo-provinsi-kepulauan-riau.png'),
+            'logoSekolah' => $this->logoDataUri('logo-smkn4-tanjungpinang.png'),
         ]);
 
         $path = 'sertifikat/' . Str::lower(str_replace('/', '-', $nomor)) . '.pdf';
-        Storage::disk('public')->put($path, $pdfBinary);
+        Storage::disk('local')->put($path, $pdfBinary);
 
         Certificate::create([
             'placement_id' => $placement->id,
@@ -82,11 +91,10 @@ class CertificateController extends Controller
 
     public function download(Certificate $certificate)
     {
-        $fullPath = Storage::disk('public')->path($certificate->file_path);
+        abort_unless(in_array(auth()->user()->role->name, ['Admin', 'Waka Humas'], true), 403);
+        abort_unless(Storage::disk('local')->exists($certificate->file_path), 404, 'File sertifikat tidak ditemukan. Jalankan migrasi berkas lama terlebih dahulu.');
 
-        abort_unless(file_exists($fullPath), 404, 'File sertifikat tidak ditemukan.');
-
-        return response()->download($fullPath, str_replace('/', '-', $certificate->nomor_sertifikat) . '.pdf');
+        return Storage::disk('local')->download($certificate->file_path, str_replace('/', '-', $certificate->nomor_sertifikat) . '.pdf');
     }
 
     // Halaman publik (tanpa login) yang dibuka saat QR di-scan
@@ -101,9 +109,41 @@ class CertificateController extends Controller
 
     private function nextNomor(): string
     {
-        $urutan = Certificate::whereYear('tanggal_terbit', now()->year)->count() + 1;
+        // Nomor urut = nomor terakhir tahun ini TERMASUK sertifikat di Sampah (nomor_sertifikat unik).
+        $awalan = 'CERT/' . now()->format('Y') . '/';
+        $urutanTerbit = (Certificate::withTrashed()->where('nomor_sertifikat', 'like', $awalan . '%')->pluck('nomor_sertifikat')
+            ->map(fn ($n) => (int) last(explode('/', $n)))->max() ?? 0) + 1;
+        $urutanTersimpan = ((int) DB::table('document_number_sequences')->where('name', 'certificate:' . now()->format('Y'))->value('last_number')) + 1;
 
-        return sprintf('CERT/%s/%s/%04d', now()->format('Y'), now()->format('m'), $urutan);
+        return sprintf('CERT/%s/%s/%04d', now()->format('Y'), now()->format('m'), max($urutanTerbit, $urutanTersimpan));
+    }
+
+    private function allocateNomor(): string
+    {
+        $year = now()->format('Y');
+        $sequenceName = 'certificate:' . $year;
+        $prefix = 'CERT/' . $year . '/';
+        $existingMaximum = DB::table('document_number_sequences')->where('name', $sequenceName)->exists()
+            ? 0
+            : ((Certificate::withTrashed()
+                ->where('nomor_sertifikat', 'like', $prefix . '%')
+                ->pluck('nomor_sertifikat')
+                ->map(fn ($number) => (int) last(explode('/', $number)))
+                ->max()) ?? 0);
+
+        return DB::transaction(function () use ($year, $sequenceName, $existingMaximum) {
+            DB::table('document_number_sequences')->insertOrIgnore([
+                'name' => $sequenceName,
+                'last_number' => $existingMaximum,
+            ]);
+            DB::table('document_number_sequences')->where('name', $sequenceName)
+                ->where('last_number', '<', $existingMaximum)
+                ->update(['last_number' => $existingMaximum]);
+            DB::table('document_number_sequences')->where('name', $sequenceName)->increment('last_number');
+            $sequence = DB::table('document_number_sequences')->where('name', $sequenceName)->value('last_number');
+
+            return sprintf('CERT/%s/%s/%04d', $year, now()->format('m'), $sequence);
+        });
     }
 
     private function makeQrSvg(string $text): string
@@ -111,6 +151,14 @@ class CertificateController extends Controller
         $renderer = new ImageRenderer(new RendererStyle(240, 0), new SvgImageBackEnd());
 
         return (new Writer($renderer))->writeString($text);
+    }
+
+    private function logoDataUri(string $filename): string
+    {
+        $path = public_path('images/' . $filename);
+        abort_unless(is_file($path), 500, 'Logo dokumen tidak ditemukan.');
+
+        return 'data:image/png;base64,' . base64_encode(file_get_contents($path));
     }
 
     private function renderPdf(array $data): string

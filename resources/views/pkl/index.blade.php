@@ -16,7 +16,7 @@
   <div class="filter-bar">
     <a href="{{ route('pkl.index', array_filter(['status' => 'semua', 'jurusan' => request('jurusan')])) }}" class="chip {{ $status === 'semua' ? 'active' : '' }}">Semua</a>
     <a href="{{ route('pkl.index', array_filter(['status' => 'berjalan', 'jurusan' => request('jurusan')])) }}" class="chip {{ $status === 'berjalan' ? 'active' : '' }}">Berjalan</a>
-    <a href="{{ route('pkl.index', array_filter(['status' => 'selesai', 'jurusan' => request('jurusan')])) }}" class="chip {{ $status === 'selesai' ? 'active' : '' }}">Selesai</a>
+    <a href="{{ route('pkl.index', array_filter(['status' => 'arsip', 'jurusan' => request('jurusan')])) }}" class="chip {{ $status === 'arsip' ? 'active' : '' }}">Arsip</a>
 
     <form method="GET" action="{{ route('pkl.index') }}" style="display:inline;">
       <input type="hidden" name="status" value="{{ $status }}">
@@ -189,7 +189,7 @@
           <div class="info-row"><span class="k">Pembimbing Sekolah</span><span class="v">{{ $p->pembimbing->name ?? '—' }}</span></div>
           <div class="info-row"><span class="k">Pembimbing Industri</span><span class="v">{{ $p->pembimbing_industri ?: '—' }}</span></div>
           <div class="info-row"><span class="k">Nilai Akhir</span><span class="v">{{ $p->nilai !== null ? ($p->nilai + 0) . ' (' . $p->predikat() . ')' : '—' }}</span></div>
-          <div class="info-row"><span class="k">Surat Permohonan</span><span class="v">@if($p->surat_permohonan)<a class="link-more" href="{{ asset('storage/'.$p->surat_permohonan) }}" target="_blank">Lihat file</a>@else —@endif</span></div>
+          <div class="info-row"><span class="k">Surat Permohonan</span><span class="v">@if($p->surat_permohonan)<a class="link-more" href="{{ route('private-file.show', ['path' => $p->surat_permohonan]) }}" target="_blank">Lihat file</a>@else —@endif</span></div>
         </div>
 
         @if ($p->status === 'berjalan')

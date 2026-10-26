@@ -17,7 +17,7 @@ class PartnershipApproval extends Model
 
     public function document()
     {
-        return $this->belongsTo(PartnershipDocument::class, 'document_id');
+        return $this->belongsTo(PartnershipDocument::class, 'document_id')->withTrashed();
     }
 
     public function approver()

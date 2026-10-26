@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -31,7 +32,10 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Akun Anda telah dinonaktifkan. Hubungi Admin sekolah.'])->onlyInput('email');
         }
 
+        $user->forceFill(['session_token' => Str::random(64)])->save();
         Auth::login($user);
+        $request->session()->regenerate();
+        $request->session()->put('auth_session_token', $user->session_token);
 
         return match ($user->role->name) {
             'Koordinator TU' => redirect()->route('dashboard.tu'),

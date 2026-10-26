@@ -10,6 +10,7 @@
     'sertifikat'   => 'Sertifikat',
     default        => 'Ringkasan',
 })
+@section('no-error-banner', '1')
 
 @section('content')
 @php
@@ -21,6 +22,13 @@
     'pkl'          => 'Siswa PKL',
     'sertifikat'   => 'Sertifikat',
   ];
+  $importTypes = match ($role) {
+    'Admin' => ['surat-masuk', 'surat-keluar', 'mitra', 'pkl'],
+    'Koordinator TU' => ['surat-masuk', 'surat-keluar'],
+    'Waka Humas' => ['mitra', 'pkl'],
+    default => [],
+  };
+  $importLabels = ['surat-masuk' => 'Surat Masuk', 'surat-keluar' => 'Surat Keluar', 'mitra' => 'Mitra dan Dokumen Kerja Sama', 'pkl' => 'Penempatan PKL'];
 @endphp
 
 <div class="stack">
@@ -32,7 +40,21 @@
         <h2>Filter Laporan</h2>
         <div class="sub">Pilih jenis laporan dan rentang tanggal</div>
       </div>
+        <div class="report-export-actions">
+          <button type="button" id="reportPreviewButton" class="btn btn-ghost btn-sm"
+                  data-preview-url="{{ route('laporan.preview', ['jenis' => $jenis]) }}"
+                  data-pdf-url="{{ route('laporan.export.pdf', ['jenis' => $jenis]) }}"
+                  data-csv-url="{{ route('laporan.export', ['jenis' => $jenis]) }}">
+            <span aria-hidden="true">⌕</span> Pratinjau ekspor
+          </button>
+          <a href="{{ route('laporan.export.pdf', ['jenis' => $jenis, 'dari' => $dari, 'sampai' => $sampai]) }}" class="btn btn-navy btn-sm"><span aria-hidden="true">↓</span> Ekspor PDF</a>
+          <a href="{{ route('laporan.export', ['jenis' => $jenis, 'dari' => $dari, 'sampai' => $sampai]) }}" class="btn btn-ghost btn-sm"><span aria-hidden="true">↓</span> Ekspor CSV</a>
+        </div>
     </div>
+    <div class="report-export-note">PDF cocok untuk laporan hingga 2.000 baris. Gunakan CSV untuk data lebih banyak.</div>
+    @if ($errors->has('pdf') || $errors->has('jenis') || $errors->has('dari') || $errors->has('sampai'))
+      <div role="alert" class="report-import__error">{{ $errors->first() }}</div>
+    @endif
 
     <form method="GET" action="{{ route('laporan.index') }}" id="formLaporan">
       <input type="hidden" name="jenis" id="inputJenis" value="{{ $jenis }}">
@@ -65,6 +87,73 @@
       </div>
     </form>
   </div>
+
+  @if ($importTypes !== [])
+    <section class="card card-pad report-import" aria-labelledby="report-import-title">
+      <div class="report-import__header">
+        <div>
+          <div class="report-import__eyebrow">KELOLA DATA</div>
+          <h2 id="report-import-title">Impor data dari CSV</h2>
+          <p>Tambahkan data dalam jumlah banyak. Data yang sudah ada tidak akan ditimpa.</p>
+        </div>
+        <span class="report-import__limit">CSV <span>·</span> Maks. 10 MB</span>
+      </div>
+
+      @if (session('error'))<div role="alert" class="report-import__error">{{ session('error') }}</div>@endif
+      @if ($errors->has('jenis_import') || $errors->has('file_import'))<div role="alert" class="report-import__error">{{ $errors->first() }}</div>@endif
+      @if (session('import_issues'))
+        <div class="report-import__error">
+          <strong>Baris yang perlu diperbaiki:</strong>
+          <ul>@foreach (session('import_issues') as $issue)<li>{{ $issue }}</li>@endforeach</ul>
+        </div>
+      @endif
+
+      <div class="report-import__grid">
+        <section class="report-import__templates" aria-labelledby="report-template-title">
+          <div class="report-import__section-head">
+            <div><span class="report-import__step">01</span><h3 id="report-template-title">Unduh template</h3></div>
+            <span>Mulai dari format yang sesuai</span>
+          </div>
+          <div class="report-template-grid">
+            @foreach ($importTypes as $type)
+              <a class="report-template" href="{{ route('laporan.template', $type) }}">
+                <span class="report-template__icon" aria-hidden="true">CSV</span>
+                <span class="report-template__copy"><strong>{{ $importLabels[$type] }}</strong><small>Template data {{ strtolower($importLabels[$type]) }}</small></span>
+                <span class="report-template__download" aria-hidden="true">↓</span>
+              </a>
+            @endforeach
+          </div>
+        </section>
+
+        <section class="report-import__upload" aria-labelledby="report-upload-title">
+          <div class="report-import__section-head">
+            <div><span class="report-import__step">02</span><h3 id="report-upload-title">Unggah data</h3></div>
+            <span>Maks. 1.000 baris</span>
+          </div>
+          <form method="POST" action="{{ route('laporan.import') }}" enctype="multipart/form-data" class="report-import__form" id="reportImportForm">
+            @csrf
+            <div class="field">
+              <label for="jenis_import">Jenis data</label>
+              <select id="jenis_import" name="jenis_import" required>
+                @foreach ($importTypes as $type)<option value="{{ $type }}" @selected(old('jenis_import', in_array($jenis, $importTypes, true) ? $jenis : $importTypes[0]) === $type)>{{ $importLabels[$type] }}</option>@endforeach
+              </select>
+            </div>
+            <div class="field">
+              <label for="file_import">Pilih file CSV</label>
+              <input id="file_import" type="file" name="file_import" accept=".csv,.txt" required>
+            </div>
+            <button type="submit" class="btn btn-primary report-import__submit" id="reportImportSubmit"><span aria-hidden="true">↑</span> Periksa CSV</button>
+          </form>
+          <div class="report-import__preview" id="reportImportPreview" aria-live="polite" hidden></div>
+        </section>
+      </div>
+
+      <div class="report-import__guidance">
+        <span class="report-import__info-icon" aria-hidden="true">i</span>
+        <div><strong>Sebelum mengimpor</strong><p>Isi tanggal dengan format YYYY-MM-DD dan pertahankan nama kolom template. Pratinjau menampilkan jumlah baris dan lima baris pertama; pemeriksaan lengkap dilakukan saat impor. Jika ada satu baris tidak valid, seluruh file ditolak. Surat keluar dibuat sebagai draf; impor mitra membuat pengajuan dengan alur persetujuan.</p></div>
+      </div>
+    </section>
+  @endif
 
   {{-- ========== RINGKASAN ========== --}}
   @if ($jenis === 'ringkasan')
@@ -134,13 +223,14 @@
                 <td>
                   @php
                     $pill = match($st) {
-                      'aktif' => 'pill-success',
+                      'berjalan' => 'pill-success',
                       'selesai' => 'pill-neutral',
-                      'batal' => 'pill-danger',
+                      'dibatalkan' => 'pill-danger',
                       default => 'pill-warning',
                     };
+                    $labelPkl = match($st) { 'berjalan' => 'Berjalan', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan', default => $st };
                   @endphp
-                  <span class="pill {{ $pill }}"><span class="dot"></span>{{ ucfirst($st) }}</span>
+                  <span class="pill {{ $pill }}"><span class="dot"></span>{{ $labelPkl }}</span>
                 </td>
                 <td style="text-align:right;" class="cell-strong">{{ $jml }}</td>
               </tr>
@@ -351,10 +441,11 @@
   @if ($jenis === 'pkl')
     <div class="grid-4">
       <div class="stat"><div class="label">Total (periode)</div><div class="value">{{ $total }}</div></div>
-      <div class="stat"><div class="label">Aktif</div><div class="value">{{ $byStatus['aktif'] ?? 0 }}</div></div>
+      <div class="stat"><div class="label">Berjalan</div><div class="value">{{ $byStatus['berjalan'] ?? 0 }}</div></div>
       <div class="stat"><div class="label">Selesai</div><div class="value">{{ $byStatus['selesai'] ?? 0 }}</div></div>
-      <div class="stat"><div class="label">Total Siswa Terdaftar</div><div class="value">{{ $siswaTotal }}</div></div>
+      <div class="stat"><div class="label">Dibatalkan</div><div class="value">{{ $byStatus['dibatalkan'] ?? 0 }}</div></div>
     </div>
+    <div class="hint" style="margin-top:-4px;">Total siswa terdaftar: <strong>{{ $siswaTotal }}</strong></div>
 
     @if ($byJurusan->isNotEmpty())
       <div class="card card-pad">
@@ -392,9 +483,9 @@
           @forelse ($items as $p)
             @php
               $pill = match($p->status) {
-                'aktif' => 'pill-success',
+                'berjalan' => 'pill-success',
                 'selesai' => 'pill-neutral',
-                'batal' => 'pill-danger',
+                'dibatalkan' => 'pill-danger',
                 default => 'pill-warning',
               };
             @endphp
@@ -456,4 +547,176 @@
   @endif
 
 </div>
+
+<div class="report-preview" id="reportPreviewModal" aria-hidden="true">
+  <section class="report-preview__dialog" role="dialog" aria-modal="true" aria-labelledby="reportPreviewTitle">
+    <header class="report-preview__header">
+      <div><span class="report-preview__eyebrow">PRATINJAU EKSPOR</span><h2 id="reportPreviewTitle">Pratinjau laporan</h2></div>
+      <button type="button" class="report-preview__close" id="reportPreviewClose" aria-label="Tutup pratinjau">&times;</button>
+    </header>
+    <div class="report-preview__body" id="reportPreviewBody"><p>Memuat pratinjau…</p></div>
+    <footer class="report-preview__footer">
+      <span id="reportPreviewNote">Pratinjau mengikuti filter laporan yang dipilih.</span>
+      <div><a id="reportPreviewPdf" href="#" class="btn btn-navy btn-sm">Unduh PDF</a><a id="reportPreviewCsv" href="#" class="btn btn-ghost btn-sm">Unduh CSV</a></div>
+    </footer>
+  </section>
+</div>
+@endsection
+
+@section('scripts')
+<script>
+(() => {
+  const trigger = document.getElementById('reportPreviewButton');
+  const modal = document.getElementById('reportPreviewModal');
+  if (!trigger || !modal) return;
+  const body = document.getElementById('reportPreviewBody');
+  const note = document.getElementById('reportPreviewNote');
+  const pdfLink = document.getElementById('reportPreviewPdf');
+  const csvLink = document.getElementById('reportPreviewCsv');
+  const close = () => { modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true'); };
+  document.getElementById('reportPreviewClose').addEventListener('click', close);
+  modal.addEventListener('click', event => { if (event.target === modal) close(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && modal.classList.contains('open')) close(); });
+  trigger.addEventListener('click', async () => {
+    const filters = document.getElementById('formLaporan');
+    const params = new URLSearchParams({ dari: filters.elements.dari.value, sampai: filters.elements.sampai.value });
+    const appendFilters = base => `${base}?${params.toString()}`;
+    pdfLink.href = appendFilters(trigger.dataset.pdfUrl);
+    csvLink.href = appendFilters(trigger.dataset.csvUrl);
+    modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false');
+    body.replaceChildren();
+    const loading = document.createElement('p'); loading.textContent = 'Memuat pratinjau…'; body.append(loading);
+    try {
+      const response = await fetch(appendFilters(trigger.dataset.previewUrl), { headers: { Accept: 'application/json' } });
+      if (!response.ok) throw new Error('Pratinjau gagal dimuat. Periksa rentang tanggal lalu coba lagi.');
+      const data = await response.json();
+      document.getElementById('reportPreviewTitle').textContent = data.title;
+      body.replaceChildren();
+      const count = document.createElement('p');
+      count.className = 'report-preview__count';
+      count.textContent = data.rows.length ? `Menampilkan ${data.rows.length} baris pertama.` : 'Tidak ada data pada filter ini.';
+      body.append(count);
+      if (data.headers.length) {
+        const wrapper = document.createElement('div'); wrapper.className = 'report-preview__table-wrap';
+        const table = document.createElement('table');
+        const head = document.createElement('thead'), headerRow = document.createElement('tr');
+        data.headers.forEach(value => { const cell = document.createElement('th'); cell.textContent = String(value).replaceAll('_', ' '); headerRow.append(cell); });
+        head.append(headerRow); table.append(head);
+        const tbody = document.createElement('tbody');
+        data.rows.forEach(row => {
+          const tr = document.createElement('tr');
+          row.forEach(value => { const cell = document.createElement('td'); cell.textContent = value || '—'; tr.append(cell); });
+          tbody.append(tr);
+        });
+        table.append(tbody); wrapper.append(table); body.append(wrapper);
+      }
+      note.textContent = data.has_more ? `Menampilkan ${data.limit} baris pertama. File ekspor memuat seluruh data pada filter terpilih.` : 'Pratinjau menampilkan seluruh data yang cocok dengan filter.';
+    } catch (error) {
+      body.replaceChildren();
+      const message = document.createElement('p'); message.className = 'report-preview__error';
+      message.textContent = error.message || 'Pratinjau gagal dimuat.'; body.append(message);
+    }
+  });
+})();
+
+(() => {
+  const form = document.getElementById('reportImportForm');
+  if (!form) return;
+  const input = document.getElementById('file_import');
+  const button = document.getElementById('reportImportSubmit');
+  const preview = document.getElementById('reportImportPreview');
+  let previewedFile = null;
+
+  const parseCsv = (text, delimiter) => {
+    const rows = [];
+    let row = [], cell = '', quoted = false;
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      if (quoted && char === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+      else if (char === '"') quoted = !quoted;
+      else if (!quoted && char === delimiter) { row.push(cell); cell = ''; }
+      else if (!quoted && (char === '\n' || char === '\r')) {
+        if (char === '\r' && text[i + 1] === '\n') i++;
+        row.push(cell); cell = '';
+        if (row.some(value => value.trim() !== '')) rows.push(row);
+        row = [];
+      } else cell += char;
+    }
+    row.push(cell);
+    if (row.some(value => value.trim() !== '')) rows.push(row);
+    return rows;
+  };
+
+  const renderPreview = (rows, count) => {
+    preview.replaceChildren();
+    preview.hidden = false;
+    const summary = document.createElement('strong');
+    summary.textContent = `${count} baris data terdeteksi`;
+    preview.append(summary);
+    const note = document.createElement('p');
+    note.textContent = 'Periksa header dan contoh isi berikut. Validasi referensi serta format dilakukan di server sebelum data disimpan.';
+    preview.append(note);
+    const table = document.createElement('table');
+    table.className = 'report-import__preview-table';
+    rows.slice(0, 6).forEach((row, rowIndex) => {
+      const tr = document.createElement('tr');
+      row.forEach(value => {
+        const cell = document.createElement(rowIndex === 0 ? 'th' : 'td');
+        cell.textContent = value || '—';
+        tr.append(cell);
+      });
+      table.append(tr);
+    });
+    preview.append(table);
+    button.innerHTML = '<span aria-hidden="true">↑</span> Impor ' + count.toLocaleString('id-ID') + ' baris';
+    button.disabled = count > 1000;
+    if (count > 1000) {
+      const limit = document.createElement('p');
+      limit.className = 'report-import__preview-limit';
+      limit.textContent = 'Batas impor adalah 1.000 baris. Bagi file menjadi beberapa bagian sebelum melanjutkan.';
+      preview.append(limit);
+    }
+    button.dataset.rowCount = String(count);
+    previewedFile = input.files[0];
+  };
+
+  input.addEventListener('change', () => {
+    previewedFile = null;
+    preview.hidden = true;
+    preview.replaceChildren();
+    button.innerHTML = '<span aria-hidden="true">↑</span> Periksa CSV';
+    button.disabled = false;
+  });
+
+  form.addEventListener('submit', event => {
+    if (previewedFile === input.files[0] && input.files[0]) {
+      if (Number(button.dataset.rowCount) > 1000 || !window.confirm(`Impor ${Number(button.dataset.rowCount).toLocaleString('id-ID')} baris? Data akan ditambahkan sebagai data baru dan tidak memperbarui data yang ada.`)) event.preventDefault();
+      return;
+    }
+    event.preventDefault();
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result || '').replace(/^\uFEFF/, '');
+      const firstLine = text.split(/\r?\n/, 1)[0] || '';
+      const delimiter = (firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length ? ';' : ',';
+      const rows = parseCsv(text, delimiter);
+      const headers = rows[0] || [];
+      const dataRows = rows.slice(1);
+      if (!headers.length || !dataRows.length) {
+        preview.hidden = false;
+        preview.textContent = 'CSV belum memiliki header dan baris data. Gunakan template yang sesuai lalu isi datanya.';
+        return;
+      }
+      renderPreview([headers, ...dataRows.slice(0, 5)], dataRows.length);
+    };
+    reader.onerror = () => {
+      preview.hidden = false;
+      preview.textContent = 'File tidak dapat dibaca. Coba pilih file CSV lain.';
+    };
+    reader.readAsText(file);
+  });
+})();
+</script>
 @endsection

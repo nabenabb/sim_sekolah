@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Disposition;
 use App\Models\IncomingLetter;
 use App\Models\User;
+use App\Support\DocumentNumberGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -24,12 +25,17 @@ class IncomingLetterController extends Controller
             });
         }
 
-        // ---- Filter chip: semua / menunggu / ditindaklanjuti ----
+        // ---- Filter chip: semua / menunggu / diproses / arsip ----
         $status = $request->query('status', 'semua');
         if ($status === 'menunggu') {
             $query->whereDoesntHave('dispositions');
-        } elseif ($status === 'ditindaklanjuti') {
-            $query->whereHas('dispositions');
+        } elseif ($status === 'diproses') {
+            // Masih ada minimal 1 disposisi yang belum "selesai"
+            $query->whereHas('dispositions', fn ($q) => $q->where('status', '!=', 'selesai'));
+        } elseif ($status === 'arsip') {
+            // Semua disposisinya sudah "selesai" - tidak butuh tindakan lagi
+            $query->whereHas('dispositions')
+                  ->whereDoesntHave('dispositions', fn ($q) => $q->where('status', '!=', 'selesai'));
         }
 
         $letters = $query->paginate(8)->withQueryString();
@@ -46,11 +52,12 @@ class IncomingLetterController extends Controller
         $data = $this->validatedData($request);
 
         if ($request->hasFile('file_scan')) {
-            $data['file_path'] = $request->file('file_scan')->store('surat-masuk', 'public');
+            $data['file_path'] = $request->file('file_scan')->store('surat-masuk', 'local');
         }
 
-        $urutan = IncomingLetter::whereYear('tanggal_terima', now()->year)->count() + 1;
-        $data['no_agenda'] = sprintf('%03d/AGD/%s/%s', $urutan, now()->format('m'), now()->format('y'));
+        // Nomor urut = nomor terakhir tahun ini TERMASUK surat di Sampah (soft delete),
+        // supaya nomor tidak pernah dobel dengan surat lain (no_agenda bersifat unik).
+        $data['no_agenda'] = app(DocumentNumberGenerator::class)->incomingAgenda();
         $data['created_by'] = auth()->id();
 
         $letter = IncomingLetter::create($data);
@@ -64,7 +71,12 @@ class IncomingLetterController extends Controller
         $data = $this->validatedData($request);
 
         if ($request->hasFile('file_scan')) {
-            $data['file_path'] = $request->file('file_scan')->store('surat-masuk', 'public');
+            $oldPath = $letter->file_path;
+            $data['file_path'] = $request->file('file_scan')->store('surat-masuk', 'local');
+            if ($oldPath) {
+                Storage::disk('local')->delete($oldPath);
+                Storage::disk('public')->delete($oldPath);
+            }
         }
 
         $letter->update($data);
@@ -90,6 +102,7 @@ class IncomingLetterController extends Controller
     {
         $validated = $request->validate([
             'tujuan' => 'required|array|min:1',
+            'tujuan.*' => ['required', 'string', 'distinct', 'in:' . implode(',', Disposition::ROLE_PENERIMA)],
             'instruksi' => 'required|array|min:1',
             'catatan' => 'nullable|string',
         ]);
@@ -103,7 +116,10 @@ class IncomingLetterController extends Controller
         $dilewati = [];
 
         foreach ($validated['tujuan'] as $namaRole) {
-            $user = User::whereHas('role', fn ($q) => $q->where('name', $namaRole))->first();
+            $user = User::where('is_active', true)
+                ->whereHas('role', fn ($q) => $q->where('name', $namaRole))
+                ->orderBy('id')
+                ->first();
 
             if ($user) {
                 Disposition::create([

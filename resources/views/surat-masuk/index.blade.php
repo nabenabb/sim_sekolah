@@ -30,7 +30,8 @@
       <div class="filter-bar">
         <a href="{{ route('surat-masuk.index', array_filter(['status' => 'semua', 'q' => request('q')])) }}" class="chip {{ $status === 'semua' ? 'active' : '' }}">Semua</a>
         <a href="{{ route('surat-masuk.index', array_filter(['status' => 'menunggu', 'q' => request('q')])) }}" class="chip {{ $status === 'menunggu' ? 'active' : '' }}">Menunggu disposisi</a>
-        <a href="{{ route('surat-masuk.index', array_filter(['status' => 'ditindaklanjuti', 'q' => request('q')])) }}" class="chip {{ $status === 'ditindaklanjuti' ? 'active' : '' }}">Ditindaklanjuti</a>
+        <a href="{{ route('surat-masuk.index', array_filter(['status' => 'diproses', 'q' => request('q')])) }}" class="chip {{ $status === 'diproses' ? 'active' : '' }}">Diproses</a>
+        <a href="{{ route('surat-masuk.index', array_filter(['status' => 'arsip', 'q' => request('q')])) }}" class="chip {{ $status === 'arsip' ? 'active' : '' }}">Arsip</a>
       </div>
     </div>
 
@@ -105,7 +106,7 @@
             <span class="k">File Scan</span>
             <span class="v">
               @if ($selected->file_path)
-                <a class="link-more" href="{{ asset('storage/' . $selected->file_path) }}" target="_blank">Lihat lampiran</a>
+                <a class="link-more" href="{{ route('private-file.show', ['path' => $selected->file_path]) }}" target="_blank">Lihat lampiran</a>
               @else
                 —
               @endif

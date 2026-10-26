@@ -9,7 +9,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 #[Fillable(['name', 'email', 'password_hash', 'role_id', 'program_keahlian_id', 'is_active'])]
-#[Hidden(['password_hash', 'remember_token'])]
+#[Hidden(['password_hash', 'remember_token', 'session_token'])]
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;

@@ -24,7 +24,7 @@ class OutgoingLetter extends Model
 
     public function refLetter()
     {
-        return $this->belongsTo(IncomingLetter::class, 'ref_incoming_letter_id');
+        return $this->belongsTo(IncomingLetter::class, 'ref_incoming_letter_id')->withTrashed();
     }
 
     public function creator()

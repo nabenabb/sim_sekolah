@@ -16,8 +16,11 @@ class PklPlacementController extends Controller
         $query = PklPlacement::with(['student.programKeahlian', 'partner', 'pembimbing', 'certificate']);
 
         $status = $request->query('status', 'semua');
-        if (in_array($status, ['berjalan', 'selesai'])) {
-            $query->where('status', $status);
+        if ($status === 'berjalan') {
+            $query->where('status', 'berjalan');
+        } elseif ($status === 'arsip') {
+            // Arsip = sudah final, tidak butuh tindakan lagi (selesai ATAU dibatalkan)
+            $query->whereIn('status', ['selesai', 'dibatalkan']);
         }
 
         if ($request->filled('q')) {
@@ -57,7 +60,12 @@ class PklPlacementController extends Controller
         $data = $request->validate([
             'student_id' => 'required|exists:students,id',
             'partner_id' => 'required|exists:industry_partners,id',
-            'pembimbing_id' => 'required|exists:users,id',
+            'pembimbing_id' => ['required', 'exists:users,id', function ($attribute, $value, $fail) {
+                $user = User::with('role')->find($value);
+                if (! $user || ! $user->is_active || ! in_array($user->role->name, ['Guru', 'Kepala Program Keahlian'], true)) {
+                    $fail('Pembimbing harus merupakan Guru atau Kepala Program Keahlian yang aktif.');
+                }
+            }],
             'pembimbing_industri' => 'nullable|string|max:100',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
@@ -71,7 +79,7 @@ class PklPlacementController extends Controller
         }
 
         if ($request->hasFile('surat_permohonan')) {
-            $data['surat_permohonan'] = $request->file('surat_permohonan')->store('pkl', 'public');
+            $data['surat_permohonan'] = $request->file('surat_permohonan')->store('pkl', 'local');
         }
 
         $data['status'] = 'berjalan';

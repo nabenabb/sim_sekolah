@@ -78,7 +78,7 @@ class LaporanController extends Controller
         $dokumenAktif = PartnershipDocument::where('status', 'disetujui')
             ->where('berlaku_selesai', '>=', now()->toDateString())
             ->count();
-        $pklAktif = PklPlacement::where('status', 'aktif')->count();
+        $pklAktif = PklPlacement::where('status', 'berjalan')->count();
         $pklSelesai = PklPlacement::where('status', 'selesai')
             ->whereBetween('tanggal_selesai', [$dari, $sampai])
             ->count();
@@ -184,10 +184,8 @@ class LaporanController extends Controller
     private function laporanPkl(Carbon $dari, Carbon $sampai): array
     {
         $items = PklPlacement::with(['student.programKeahlian', 'partner', 'pembimbing'])
-            ->where(function ($q) use ($dari, $sampai) {
-                $q->whereBetween('tanggal_mulai', [$dari, $sampai])
-                  ->orWhereBetween('tanggal_selesai', [$dari, $sampai]);
-            })
+            ->where('tanggal_mulai', '<=', $sampai)
+            ->where('tanggal_selesai', '>=', $dari)
             ->orderByDesc('tanggal_mulai')
             ->get();
 

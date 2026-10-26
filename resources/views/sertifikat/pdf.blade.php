@@ -6,59 +6,85 @@
 <style>
   @page { margin: 0; }
   body { margin: 0; font-family: 'DejaVu Sans', sans-serif; color: #10253D; }
-  .frame { margin: 22px; border: 3px solid #14406B; padding: 4px; }
-  .frame-inner { border: 1px solid #F5B400; padding: 22px 40px 18px 40px; }
+  .frame { margin: 20px; border: 3px solid #143B61; padding: 4px; }
+  .frame-inner { min-height: 500px; border: 1px solid #D6A51D; padding: 18px 34px 14px; }
   .center { text-align: center; }
-  .school { font-size: 13px; letter-spacing: 2px; color: #14406B; font-weight: bold; }
-  .title { font-size: 28px; font-weight: bold; color: #14406B; margin: 6px 0 2px 0; letter-spacing: 1px; }
-  .bar { width: 90px; height: 3px; background: #F5B400; margin: 8px auto 14px auto; }
+  table.head { width: 100%; border-collapse: collapse; }
+  table.head td { vertical-align: middle; }
+  .logo-cell { width: 88px; text-align: center; }
+  .logo { width: 68px; height: 68px; object-fit: contain; }
+  .school { font-size: 10px; letter-spacing: 1.2px; color: #14406B; font-weight: bold; }
+  .title { font-size: 30px; font-weight: bold; color: #14406B; margin: 4px 0 0; letter-spacing: 2px; }
+  .subtitle { font-size: 11px; letter-spacing: 1.5px; color: #52677C; font-weight: bold; }
+  .bar { width: 92px; height: 3px; background: #D6A51D; margin: 11px auto 12px; }
   .lead { font-size: 12px; color: #5B6B7D; margin: 0; }
-  .name { font-size: 26px; font-weight: bold; margin: 8px 0 2px 0; color: #10253D; }
-  .sub { font-size: 12px; color: #5B6B7D; margin: 0 0 10px 0; }
-  .body-text { font-size: 12.5px; line-height: 1.6; margin: 0 auto; width: 88%; }
-  table.meta { margin: 12px auto 0 auto; font-size: 12px; border-collapse: collapse; }
-  table.meta td { padding: 3px 12px; text-align: left; }
-  table.meta td.k { color: #5B6B7D; }
-  table.foot { width: 100%; margin-top: 18px; border-collapse: collapse; }
-  table.foot td { vertical-align: bottom; font-size: 11px; }
-  .sign-space { height: 46px; }
-  .mono { font-family: 'DejaVu Sans Mono', monospace; font-size: 10.5px; color: #5B6B7D; }
+  .name { font-size: 25px; font-weight: bold; margin: 5px 0; color: #10253D; }
+  .sub { font-size: 11px; color: #52677C; margin: 0; }
+  .body-text { font-size: 12px; line-height: 1.55; margin: 10px auto 0; width: 90%; }
+  table.meta { margin: 11px auto 0; font-size: 10.5px; border-collapse: collapse; }
+  table.meta td { padding: 3px 10px; text-align: left; }
+  table.meta td.k { color: #52677C; }
+  table.foot { width: 100%; margin-top: 12px; border-collapse: collapse; }
+  table.foot td { vertical-align: bottom; font-size: 10px; }
+  .sign-space { height: 36px; }
+  .mono { font-family: 'DejaVu Sans Mono', monospace; font-size: 9px; color: #5B6B7D; }
+  .qr { width: 66px; height: 66px; }
+  .number { font-size: 9px; font-weight: bold; color: #143B61; }
 </style>
 </head>
 <body>
-@php $student = $placement->student; @endphp
+@php
+  $student = $placement->student;
+  $tanggalMulai = $placement->tanggal_mulai->locale('id')->translatedFormat('d F Y');
+  $tanggalSelesai = $placement->tanggal_selesai->locale('id')->translatedFormat('d F Y');
+@endphp
 <div class="frame">
   <div class="frame-inner">
+    <table class="head"><tr>
+      <td class="logo-cell"><img class="logo" src="{{ $logoProvinsi }}" alt="Lambang Provinsi Kepulauan Riau"></td>
+      <td class="center">
+        <div class="school">PEMERINTAH PROVINSI KEPULAUAN RIAU</div>
+        <div class="school" style="margin-top:3px;">SMK NEGERI 4 TANJUNGPINANG</div>
+        <div class="title">SERTIFIKAT</div>
+        <div class="subtitle">PRAKTIK KERJA LAPANGAN</div>
+      </td>
+      <td class="logo-cell"><img class="logo" src="{{ $logoSekolah }}" alt="Lambang SMK Negeri 4 Tanjungpinang"></td>
+    </tr></table>
+    <div class="bar"></div>
     <div class="center">
-      <div class="school">SMK NEGERI 4 TANJUNGPINANG</div>
-      <div class="title">SERTIFIKAT</div>
-      <div class="school" style="letter-spacing:1px;">PRAKTIK KERJA LAPANGAN</div>
-      <div class="bar"></div>
       <p class="lead">Diberikan kepada</p>
       <p class="name">{{ $student->nama }}</p>
-      <p class="sub">NIS {{ $student->nis }} &middot; {{ $student->programKeahlian->nama_jurusan ?? '' }}</p>
+      <p class="sub">NIS {{ $student->nis }} | {{ $student->programKeahlian->nama_jurusan ?? '-' }}</p>
+      <p class="body-text">
+        Telah menyelesaikan Praktik Kerja Lapangan di <b>{{ $placement->partner->nama_perusahaan }}</b>
+        dengan baik pada periode <b>{{ $tanggalMulai }} sampai {{ $tanggalSelesai }}</b>.
+      </p>
+      <table class="meta">
+        <tr><td class="k">Nilai akhir</td><td>:</td><td><b>{{ rtrim(rtrim(number_format($placement->nilai, 2, ',', '.'), '0'), ',') }}</b></td></tr>
+        <tr><td class="k">Predikat</td><td>:</td><td><b>{{ $placement->nilai >= 85 ? 'Sangat Baik' : ($placement->nilai >= 75 ? 'Baik' : ($placement->nilai >= 60 ? 'Cukup' : 'Kurang')) }}</b></td></tr>
+      </table>
     </div>
-
-    <p class="body-text center">
-      telah menyelesaikan Praktik Kerja Lapangan di <b>{{ $placement->partner->nama_perusahaan }}</b>
-      pada periode <b>{{ $placement->periodeText() }}</b>
-      dengan nilai akhir <b>{{ $placement->nilai + 0 }} ({{ $placement->predikat() }})</b>.
-    </p>
 
     <table class="foot">
       <tr>
-        <td style="width:30%;">
-          <img src="{{ $qrDataUri }}" width="86" height="86" alt="QR verifikasi"><br>
-          <span class="mono">{{ $nomor }}</span>
+        <td style="width:22%;">
+          <img class="qr" src="{{ $qrDataUri }}" alt="QR verifikasi"><br>
+          <span class="number">{{ $nomor }}</span>
         </td>
-        <td style="width:30%;" class="center">
-          <span class="mono">Pindai QR untuk<br>memverifikasi keaslian</span>
+        <td style="width:26%;" class="center">
+          Pembimbing Industri
+          <div class="sign-space"></div>
+          <b><u>{{ $placement->pembimbing_industri ?: '........................................' }}</u></b>
         </td>
-        <td style="width:40%;" class="center">
-          Tanjungpinang, {{ $tanggalTerbit->translatedFormat('d F Y') }}<br>
-          Kepala SMK Negeri 4 Tanjungpinang
+        <td style="width:26%;" class="center">
+          Mengetahui,<br>Kepala SMK Negeri 4 Tanjungpinang<br>
           <div class="sign-space"></div>
           <b><u>{{ $namaKepsek }}</u></b>
+        </td>
+        <td style="width:26%;" class="center">
+          Tanjungpinang, {{ $tanggalTerbit->locale('id')->translatedFormat('d F Y') }}<br>
+          Pindai QR untuk verifikasi<br>
+          <span class="mono">Dokumen elektronik resmi</span>
         </td>
       </tr>
     </table>

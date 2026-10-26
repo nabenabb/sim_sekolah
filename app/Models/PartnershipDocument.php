@@ -24,7 +24,7 @@ class PartnershipDocument extends Model
 
     public function partner()
     {
-        return $this->belongsTo(IndustryPartner::class, 'partner_id');
+        return $this->belongsTo(IndustryPartner::class, 'partner_id')->withTrashed();
     }
 
     public function approvals()

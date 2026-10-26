@@ -44,7 +44,7 @@ class UserController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:100',
             'email' => 'required|email|max:100|unique:users,email',
-            'password' => 'required|string|min:5',
+            'password' => 'required|string|min:8',
             'role_id' => 'required|exists:roles,id',
             'program_keahlian_id' => 'nullable|exists:program_keahlian,id',
         ]);
@@ -78,10 +78,14 @@ class UserController extends Controller
     public function resetPassword(Request $request, User $user)
     {
         $data = $request->validate([
-            'password' => 'required|string|min:5',
+            'password' => 'required|string|min:8',
         ]);
 
         $user->update(['password_hash' => Hash::make($data['password'])]);
+        $user->forceFill([
+            'remember_token' => \Illuminate\Support\Str::random(60),
+            'session_token' => \Illuminate\Support\Str::random(64),
+        ])->save();
 
         return redirect()->route('manajemen-pengguna.index')->with('success', 'Password user "' . $user->name . '" berhasil direset.');
     }
@@ -94,6 +98,7 @@ class UserController extends Controller
         }
 
         $user->update(['is_active' => ! $user->is_active]);
+        $user->forceFill(['session_token' => \Illuminate\Support\Str::random(64)])->save();
 
         $pesan = $user->is_active ? 'diaktifkan kembali' : 'dinonaktifkan';
 

@@ -6,10 +6,12 @@ use App\Models\IncomingLetter;
 use App\Models\OutgoingLetter;
 use App\Models\Student;
 use App\Models\User;
+use App\Support\DocumentNumberGenerator;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OutgoingLetterController extends Controller
 {
@@ -27,7 +29,10 @@ class OutgoingLetterController extends Controller
         }
 
         $status = $request->query('status', 'semua');
-        if (in_array($status, ['draf', 'menunggu_ttd', 'terkirim'])) {
+        if ($status === 'arsip') {
+            // "Arsip" = surat yang sudah terkirim, prosesnya final
+            $query->where('status', 'terkirim');
+        } elseif (in_array($status, ['draf', 'menunggu_ttd', 'terkirim'])) {
             $query->where('status', $status);
         }
 
@@ -47,15 +52,16 @@ class OutgoingLetterController extends Controller
         $jenis = $request->input('jenis_template', 'umum');
         $data = $this->validatedData($request, $jenis);
 
-        $urutan = OutgoingLetter::whereYear('tanggal', now()->year)->count() + 1;
-        $data['no_surat'] = sprintf('%03d/SMKN4/%s/%s', $urutan, now()->format('m'), now()->format('y'));
+        // Nomor urut = nomor terakhir tahun ini TERMASUK surat di Sampah (soft delete),
+        // supaya nomor tidak pernah dobel dengan surat lain (no_surat bersifat unik).
+        $data['no_surat'] = app(DocumentNumberGenerator::class)->outgoingLetter();
         $data['created_by'] = auth()->id();
         $data['jenis_template'] = $jenis;
 
         if ($jenis === 'umum') {
             $data['status'] = $request->has('ajukan') ? 'menunggu_ttd' : 'draf';
             if ($request->hasFile('lampiran')) {
-                $data['file_path'] = $request->file('lampiran')->store('surat-keluar', 'public');
+                $data['file_path'] = $request->file('lampiran')->store('surat-keluar', 'local');
             }
             $letter = OutgoingLetter::create($data);
         } elseif ($jenis === 'undangan') {
@@ -89,7 +95,12 @@ class OutgoingLetterController extends Controller
         $data['status'] = $request->has('ajukan') ? 'menunggu_ttd' : 'draf';
 
         if ($jenis === 'umum' && $request->hasFile('lampiran')) {
-            $data['file_path'] = $request->file('lampiran')->store('surat-keluar', 'public');
+            $oldPath = $letter->file_path;
+            $data['file_path'] = $request->file('lampiran')->store('surat-keluar', 'local');
+            if ($oldPath) {
+                Storage::disk('local')->delete($oldPath);
+                Storage::disk('public')->delete($oldPath);
+            }
         }
 
         $letter->update($data);
@@ -191,9 +202,33 @@ class OutgoingLetterController extends Controller
 
     private function generateDanSimpanPdf(OutgoingLetter $letter): void
     {
+        $pdf = $this->renderPdf($letter);
+        $path = 'surat-keluar/' . str_replace('/', '-', $letter->no_surat) . '.pdf';
+        Storage::disk('local')->put($path, $pdf);
+
+        $letter->update(['file_path' => $path]);
+    }
+
+    public function downloadPdf(OutgoingLetter $letter): StreamedResponse
+    {
+        $letter->loadMissing('signer');
+        $pdf = $this->renderPdf($letter);
+        $filename = str_replace('/', '-', $letter->no_surat) . '.pdf';
+
+        return response()->streamDownload(static function () use ($pdf): void {
+            echo $pdf;
+        }, $filename, ['Content-Type' => 'application/pdf']);
+    }
+
+    private function renderPdf(OutgoingLetter $letter): string
+    {
         $kepsek = User::whereHas('role', fn ($q) => $q->where('name', 'Kepala Sekolah'))->first();
 
-        $view = $letter->jenis_template === 'undangan' ? 'surat-keluar.pdf-undangan' : 'surat-keluar.pdf-izin-siswa';
+        $view = match ($letter->jenis_template) {
+            'umum' => 'surat-keluar.pdf-umum',
+            'undangan' => 'surat-keluar.pdf-undangan',
+            default => 'surat-keluar.pdf-izin-siswa',
+        };
 
         $options = new Options();
         $options->set('defaultFont', 'DejaVu Sans');
@@ -202,15 +237,19 @@ class OutgoingLetterController extends Controller
         $dompdf->loadHtml(view($view, [
             'surat' => $letter,
             'data' => $letter->data_template ?? [],
-            'namaKepsek' => $kepsek->name ?? '______________________',
+            'namaKepsek' => $letter->signer?->name ?? $kepsek->name ?? '______________________',
+            'logoProvinsi' => $this->logoDataUri('logo-provinsi-kepulauan-riau.png'),
+            'logoSekolah' => $this->logoDataUri('logo-smkn4-tanjungpinang.png'),
         ])->render());
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 
-        $path = 'surat-keluar/' . str_replace('/', '-', $letter->no_surat) . '.pdf';
-        Storage::disk('public')->put($path, $dompdf->output());
+        return $dompdf->output();
+    }
 
-        $letter->update(['file_path' => $path]);
+    private function logoDataUri(string $filename): string
+    {
+        return 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/' . $filename)));
     }
 
     public function destroy(OutgoingLetter $letter)

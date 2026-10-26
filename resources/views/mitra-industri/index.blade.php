@@ -18,8 +18,8 @@
 
   <div class="filter-bar">
     <a href="{{ route('mitra-industri.index', array_filter(['status' => 'semua', 'jurusan' => request('jurusan')])) }}" class="chip {{ $statusFilter === 'semua' ? 'active' : '' }}">Semua</a>
-    <a href="{{ route('mitra-industri.index', array_filter(['status' => 'aktif', 'jurusan' => request('jurusan')])) }}" class="chip {{ $statusFilter === 'aktif' ? 'active' : '' }}">Aktif</a>
-    <a href="{{ route('mitra-industri.index', array_filter(['status' => 'akan_berakhir', 'jurusan' => request('jurusan')])) }}" class="chip {{ $statusFilter === 'akan_berakhir' ? 'active' : '' }}">Akan berakhir</a>
+    <a href="{{ route('mitra-industri.index', array_filter(['status' => 'proses', 'jurusan' => request('jurusan')])) }}" class="chip {{ $statusFilter === 'proses' ? 'active' : '' }}">Sedang diproses</a>
+    <a href="{{ route('mitra-industri.index', array_filter(['status' => 'arsip', 'jurusan' => request('jurusan')])) }}" class="chip {{ $statusFilter === 'arsip' ? 'active' : '' }}">Arsip</a>
 
     <form method="GET" action="{{ route('mitra-industri.index') }}" style="display:inline;">
       <input type="hidden" name="status" value="{{ $statusFilter }}">
@@ -189,7 +189,7 @@
           <div class="info-row">
             <span class="k">{{ $doc->jenis_dokumen }}@if($doc->nomor_dokumen) <span class="mono" style="font-size:11px;">({{ $doc->nomor_dokumen }})</span>@endif <span class="mono" style="font-size:11px;">{{ $doc->berlaku_mulai->format('d/m/y') }}&ndash;{{ $doc->berlaku_selesai->format('d/m/y') }}</span></span>
             <span class="v">
-              @if ($doc->file_dokumen)<a class="link-more" href="{{ asset('storage/'.$doc->file_dokumen) }}" target="_blank">Lihat file</a> &middot; @endif
+              @if ($doc->file_dokumen)<a class="link-more" href="{{ route('private-file.show', ['path' => $doc->file_dokumen]) }}" target="_blank">Lihat file</a> &middot; @endif
               {{ ucfirst($doc->status) }}
               @if (in_array(auth()->user()->role->name, ['Admin', 'Waka Humas']))
                 &middot;

@@ -25,12 +25,12 @@ class PklPlacement extends Model
 
     public function student()
     {
-        return $this->belongsTo(Student::class, 'student_id');
+        return $this->belongsTo(Student::class, 'student_id')->withTrashed();
     }
 
     public function partner()
     {
-        return $this->belongsTo(IndustryPartner::class, 'partner_id');
+        return $this->belongsTo(IndustryPartner::class, 'partner_id')->withTrashed();
     }
 
     public function pembimbing()

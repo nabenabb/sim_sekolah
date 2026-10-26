@@ -24,7 +24,7 @@
     <a href="{{ route('surat-keluar.index', array_filter(['status' => 'semua', 'q' => request('q')])) }}" class="chip {{ $status === 'semua' ? 'active' : '' }}">Semua</a>
     <a href="{{ route('surat-keluar.index', array_filter(['status' => 'draf', 'q' => request('q')])) }}" class="chip {{ $status === 'draf' ? 'active' : '' }}">Draf</a>
     <a href="{{ route('surat-keluar.index', array_filter(['status' => 'menunggu_ttd', 'q' => request('q')])) }}" class="chip {{ $status === 'menunggu_ttd' ? 'active' : '' }}">Menunggu TTD</a>
-    <a href="{{ route('surat-keluar.index', array_filter(['status' => 'terkirim', 'q' => request('q')])) }}" class="chip {{ $status === 'terkirim' ? 'active' : '' }}">Terkirim</a>
+    <a href="{{ route('surat-keluar.index', array_filter(['status' => 'arsip', 'q' => request('q')])) }}" class="chip {{ in_array($status, ['arsip', 'terkirim']) ? 'active' : '' }}">Arsip (Terkirim)</a>
   </div>
 
   <table>
@@ -219,7 +219,7 @@
           <div class="info-row"><span class="k">Perihal</span><span class="v">{{ $letter->perihal }}</span></div>
           <div class="info-row"><span class="k">Isi Ringkas</span><span class="v">{{ $letter->isi_ringkas ?: '—' }}</span></div>
           <div class="info-row"><span class="k">Rujukan Surat Masuk</span><span class="v">{{ $letter->refLetter->no_agenda ?? '—' }}</span></div>
-          <div class="info-row"><span class="k">Dokumen</span><span class="v">@if($letter->file_path)<a class="link-more" href="{{ asset('storage/'.$letter->file_path) }}" target="_blank">Lihat / Unduh PDF</a>@else —@endif</span></div>
+          <div class="info-row"><span class="k">Dokumen</span><span class="v"><a class="link-more" href="{{ route('surat-keluar.pdf', $letter) }}" target="_blank">Pratinjau / Cetak surat PDF</a>@if($letter->jenis_template === 'umum' && $letter->file_path) <span class="hint">·</span> <a class="link-more" href="{{ route('private-file.show', ['path' => $letter->file_path]) }}" target="_blank">Lihat lampiran</a>@endif</span></div>
           <div class="info-row"><span class="k">Ditandatangani oleh</span><span class="v">{{ $letter->signer->name ?? '—' }}</span></div>
         </div>
       </div>

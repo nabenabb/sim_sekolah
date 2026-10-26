@@ -82,7 +82,7 @@
           <div class="info-row"><span class="k">Sifat</span><span class="v">{{ $l->sifat }}</span></div>
           <div class="info-row"><span class="k">Perihal</span><span class="v">{{ $l->perihal }}</span></div>
           <div class="info-row"><span class="k">Instruksi</span><span class="v">{{ $d->instruksi }}</span></div>
-          <div class="info-row"><span class="k">File Scan</span><span class="v">@if($l->file_path)<a class="link-more" href="{{ asset('storage/'.$l->file_path) }}" target="_blank">Lihat lampiran</a>@else —@endif</span></div>
+          <div class="info-row"><span class="k">File Scan</span><span class="v">@if($l->file_path)<a class="link-more" href="{{ route('private-file.show', ['path' => $l->file_path]) }}" target="_blank">Lihat lampiran</a>@else —@endif</span></div>
         </div>
       </div>
       <div class="modal-foot">

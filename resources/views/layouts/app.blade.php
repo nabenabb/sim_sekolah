@@ -20,7 +20,7 @@
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark">S4</div>
+      <img class="brand-logo" src="{{ asset('images/logo-smkn4-tanjungpinang.png') }}" alt="Logo SMKN 4 Tanjungpinang">
       <div class="brand-text"><div class="t1">SIM Sekolah</div><div class="t2">SMKN 4 Tanjungpinang</div></div>
     </div>
     <nav class="nav-group">
@@ -64,16 +64,22 @@
       @if ($roleName === 'Admin')
         <div class="nav-label">ADMINISTRASI</div>
         <a class="nav-item {{ request()->routeIs('manajemen-pengguna*') ? 'active' : '' }}" href="{{ route('manajemen-pengguna.index') }}"><span class="ic">&#9673;</span><span>Manajemen Pengguna</span></a>
+        <a class="nav-item {{ request()->routeIs('sampah*') ? 'active' : '' }}" href="{{ route('sampah.index') }}"><span class="ic">&#9635;</span><span>Sampah &amp; Pemulihan</span></a>
       @endif
     </nav>
     <div class="sidebar-foot">v1.0 &middot; SIM Sekolah SMKN 4</div>
   </aside>
 
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
   <div class="main">
     <header class="topbar">
-      <div class="topbar-title">
-        <h1>@yield('page-title', 'Dashboard')</h1>
-        <div class="crumb">@yield('breadcrumb', '')</div>
+      <div style="display:flex;align-items:center;min-width:0;">
+        <button type="button" class="menu-toggle" onclick="toggleSidebar()" aria-label="Buka menu">&#9776;</button>
+        <div class="topbar-title">
+          <h1>@yield('page-title', 'Dashboard')</h1>
+          <div class="crumb">@yield('breadcrumb', '')</div>
+        </div>
       </div>
       <div class="topbar-right">
         <form method="GET" action="{{ route('cari.index') }}" class="search-mini" style="cursor:text;">
@@ -144,6 +150,12 @@
     const panel = document.getElementById('notifPanel');
     if (panel) panel.style.display = 'none';
   });
+</script>
+<script>
+  function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+    document.getElementById('sidebarBackdrop').classList.toggle('open');
+  }
 </script>
 @yield('scripts')
 </body>

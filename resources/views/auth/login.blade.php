@@ -24,6 +24,10 @@
       <h1>Masuk ke akun Anda</h1>
       <p class="sub">Gunakan akun yang terdaftar di sekolah untuk mengakses sistem.</p>
 
+      @if (session('status'))
+        <div style="background:var(--success-tint);color:var(--success);border-radius:var(--radius-control);padding:10px 14px;font-size:13px;margin-bottom:18px;">{{ session('status') }}</div>
+      @endif
+
       @if ($errors->any())
         <div style="background:var(--danger-tint);color:var(--danger);border-radius:var(--radius-control);padding:10px 14px;font-size:13px;margin-bottom:18px;">
           {{ $errors->first() }}
@@ -34,13 +38,13 @@
         @csrf
 
         <div class="field">
-          <label>Email atau NIP</label>
-          <input type="text" name="email" value="{{ old('email') }}" placeholder="nama@smkn4tanjungpinang.sch.id" required autofocus>
+          <label>Email</label>
+          <input type="email" name="email" value="{{ old('email') }}" placeholder="nama@smkn4tanjungpinang.sch.id" required autofocus autocomplete="username">
         </div>
         <div class="field">
           <label>Kata Sandi</label>
           <input type="password" name="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required>
-          <div class="hint"><a href="#" style="color:var(--primary);font-weight:600;">Lupa kata sandi?</a></div>
+          <div class="hint"><a href="{{ route('password.request') }}" style="color:var(--primary);font-weight:600;">Lupa kata sandi?</a></div>
         </div>
         <button type="submit" class="btn btn-primary btn-block">Masuk</button>
       </form>

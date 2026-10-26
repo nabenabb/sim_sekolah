@@ -16,7 +16,7 @@ class Disposition extends Model
 
     public function letter()
     {
-        return $this->belongsTo(IncomingLetter::class, 'letter_id');
+        return $this->belongsTo(IncomingLetter::class, 'letter_id')->withTrashed();
     }
 
     public function assigned()

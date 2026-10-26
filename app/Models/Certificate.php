@@ -20,6 +20,6 @@ class Certificate extends Model
 
     public function placement()
     {
-        return $this->belongsTo(PklPlacement::class, 'placement_id');
+        return $this->belongsTo(PklPlacement::class, 'placement_id')->withTrashed();
     }
 }

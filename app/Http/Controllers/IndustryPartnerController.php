@@ -30,12 +30,19 @@ class IndustryPartnerController extends Controller
 
         $partners = $query->get()->map(function ($partner) {
             $partner->computed_status = $this->computeStatus($partner);
+            // Masih ada dokumen yang lagi diverifikasi/menunggu persetujuan = belum final
+            $partner->sedang_diproses = $partner->documents->whereIn('status', ['diajukan', 'diverifikasi'])->isNotEmpty();
             return $partner;
         });
 
+        // ---- Filter chip: semua / sedang diproses / arsip ----
+        // "Arsip" di sini artinya proses persetujuan sudah final (disetujui/ditolak/kadaluarsa),
+        // terlepas dari apakah MoU-nya sendiri masih berlaku atau sudah berakhir (itu tetap kelihatan di pill per baris).
         $statusFilter = $request->query('status', 'semua');
-        if (in_array($statusFilter, ['aktif', 'akan_berakhir'])) {
-            $partners = $partners->filter(fn ($p) => $p->computed_status['key'] === $statusFilter)->values();
+        if ($statusFilter === 'proses') {
+            $partners = $partners->filter(fn ($p) => $p->sedang_diproses)->values();
+        } elseif ($statusFilter === 'arsip') {
+            $partners = $partners->filter(fn ($p) => ! $p->sedang_diproses)->values();
         }
 
         $programKeahlian = ProgramKeahlian::all();
@@ -121,7 +128,15 @@ class IndustryPartnerController extends Controller
             return back()->withErrors(['perpanjang' => $partner->nama_perusahaan . ' masih punya pengajuan yang sedang diproses. Selesaikan dulu sebelum mengajukan yang baru.']);
         }
 
-        DB::transaction(fn () => $this->createDocument($partner, $data, $request));
+        DB::transaction(function () use ($partner, $data, $request) {
+            $lockedPartner = IndustryPartner::whereKey($partner->id)->lockForUpdate()->firstOrFail();
+            $masihBerjalan = $lockedPartner->documents()->whereIn('status', ['diajukan', 'diverifikasi'])->exists();
+            if ($masihBerjalan) {
+                abort(409, 'Mitra ini sudah memiliki pengajuan yang sedang diproses.');
+            }
+
+            $this->createDocument($lockedPartner, $data, $request);
+        });
 
         return redirect()->route('mitra-industri.index')
             ->with('success', 'Pengajuan dokumen baru untuk ' . $partner->nama_perusahaan . ' dikirim untuk verifikasi.');
@@ -131,7 +146,7 @@ class IndustryPartnerController extends Controller
     private function createDocument(IndustryPartner $partner, array $data, Request $request): PartnershipDocument
     {
         $filePath = $request->hasFile('dokumen')
-            ? $request->file('dokumen')->store('kerja-sama', 'public')
+            ? $request->file('dokumen')->store('kerja-sama', 'local')
             : null;
 
         $document = PartnershipDocument::create([
@@ -160,31 +175,41 @@ class IndustryPartnerController extends Controller
     {
         $request->validate(['keputusan' => 'required|in:disetujui,ditolak']);
 
+        abort_unless($approval->status === 'menunggu', 409, 'Tahap persetujuan ini sudah diputuskan.');
+
         $roleYangBoleh = PartnershipApproval::TAHAP_ROLE[$approval->tahap] ?? null;
 
         if (auth()->user()->role->name !== $roleYangBoleh) {
             abort(403, 'Anda tidak berwenang memutuskan tahap ini.');
         }
 
-        $approval->update([
-            'status' => $request->keputusan,
-            'approved_by' => auth()->id(),
-            'tanggal' => now(),
-        ]);
+        DB::transaction(function () use ($approval, $request) {
+            $approval = PartnershipApproval::whereKey($approval->id)->lockForUpdate()->firstOrFail();
+            abort_unless($approval->status === 'menunggu', 409, 'Tahap persetujuan ini sudah diputuskan.');
 
-        $document = $approval->document;
+            $document = $approval->document;
+            abort_unless(in_array($document->status, ['diajukan', 'diverifikasi'], true), 409, 'Dokumen ini tidak sedang diproses.');
 
-        if ($request->keputusan === 'ditolak') {
-            $document->update(['status' => 'ditolak']);
-        } else {
-            $semuaTahap = $document->approvals()->get();
-            $semuaDisetujui = $semuaTahap->every(fn ($a) => $a->status === 'disetujui');
-            $adaYangSelesai = $semuaTahap->where('status', 'disetujui')->count() > 0;
+            $previousStages = array_slice(array_keys(PartnershipApproval::TAHAP_ROLE), 0, array_search($approval->tahap, array_keys(PartnershipApproval::TAHAP_ROLE), true));
+            if ($previousStages !== []) {
+                $approvedPrevious = $document->approvals()->whereIn('tahap', $previousStages)->where('status', 'disetujui')->count();
+                abort_unless($approvedPrevious === count($previousStages), 409, 'Tahap persetujuan sebelumnya belum selesai.');
+            }
 
-            $document->update([
-                'status' => $semuaDisetujui ? 'disetujui' : ($adaYangSelesai ? 'diverifikasi' : 'diajukan'),
+            $approval->update([
+                'status' => $request->keputusan,
+                'approved_by' => auth()->id(),
+                'tanggal' => now(),
             ]);
-        }
+
+            if ($request->keputusan === 'ditolak') {
+                $document->update(['status' => 'ditolak']);
+            } else {
+                $semuaTahap = $document->approvals()->get();
+                $semuaDisetujui = $semuaTahap->every(fn ($a) => $a->status === 'disetujui');
+                $document->update(['status' => $semuaDisetujui ? 'disetujui' : 'diverifikasi']);
+            }
+        });
 
         return redirect()->route('mitra-industri.index')->with('success', 'Keputusan tahap "'.$approval->tahap.'" berhasil disimpan.');
     }
