@@ -8,8 +8,8 @@
   body { margin: 0; color: #111; font-family: 'DejaVu Serif', serif; font-size: 12pt; line-height: 1.45; }
   table.kop { width: 100%; border-collapse: collapse; }
   table.kop td { vertical-align: middle; }
-  .logo-cell { width: 70px; text-align: center; }
-  .logo { width: 58px; height: 58px; object-fit: contain; }
+  .logo-cell { width: 86px; text-align: center; }
+  .logo { display: block; width: auto; height: 72px; margin: 0 auto; }
   .kop-text { text-align: center; font-family: 'DejaVu Serif', serif; color: #111; }
   .kop-text .t1 { font-size: 12px; font-weight: bold; }
   .kop-text .t2 { margin-top: 2px; font-size: 13px; font-weight: bold; }
@@ -29,7 +29,7 @@
   table.jadwal td.titik { width: 10px; }
   table.ttd { width: 100%; margin-top: 20px; border-collapse: collapse; }
   table.ttd td { vertical-align: top; }
-  .ttd-space { height: 52px; }
+  .ttd-space { height: 48px; }
   .status { position: fixed; top: 0; right: 0; border: 1px solid #B77A00; padding: 4px 9px; color: #9A6800; font-size: 8px; font-weight: bold; letter-spacing: 1px; }
 </style>
 </head>
@@ -86,7 +86,7 @@
 <table class="ttd">
   <tr>
     <td style="width:60%;"></td>
-    <td style="width:40%;text-align:center;">
+    <td style="width:40%;text-align:left;">
       {{ $data['jabatan_kepsek'] ?? 'Kepala Sekolah,' }}
       <div class="ttd-space"></div>
       <b><u>{{ $namaKepsek }}</u></b><br>

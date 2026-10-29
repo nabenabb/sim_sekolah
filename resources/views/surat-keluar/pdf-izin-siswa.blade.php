@@ -8,8 +8,8 @@
   body { margin: 0; color: #111; font-family: 'DejaVu Serif', serif; font-size: 12pt; line-height: 1.5; }
   table.kop { width: 100%; border-collapse: collapse; }
   table.kop td { vertical-align: middle; }
-  .logo-cell { width: 66px; text-align: center; }
-  .logo { width: 54px; height: 54px; object-fit: contain; }
+  .logo-cell { width: 86px; text-align: center; }
+  .logo { display: block; width: auto; height: 72px; margin: 0 auto; }
   .kop-text { text-align: center; font-family: 'DejaVu Serif', serif; color: #111; }
   .kop-text .t1 { font-size: 12px; font-weight: bold; }
   .kop-text .t2 { margin-top: 2px; font-size: 13px; font-weight: bold; }
@@ -17,7 +17,7 @@
   .kop-text .t4 { margin-top: 3px; font-size: 9.5px; line-height: 1.4; }
   .kop-line { border-bottom: 2px solid #173F66; border-top: 1px solid #173F66; margin-top: 8px; height: 2px; }
   .kop-line-thin { display: none; }
-  .judul { margin: 25px 0 4px; color: #123D63; font-family: 'DejaVu Serif', serif; font-size: 16px; font-weight: bold; letter-spacing: .8px; text-align: center; }
+  .judul { margin: 25px 0 4px; color: #123D63; font-family: 'DejaVu Serif', serif; font-size: 12pt; font-weight: bold; letter-spacing: .8px; text-align: center; }
   .nomor { margin-bottom: 21px; color: #52677C; font-size: 10px; text-align: center; }
   .kanan { margin: 0 0 17px; text-align: right; }
   .intro { margin-bottom: 16px; text-align: justify; }
@@ -28,9 +28,9 @@
   table.meta td.titik { width: 15px; background: #F2F6FA; }
   table.meta td.isian { color: #172B40; }
   table.ttd { width: 100%; margin-top: 28px; border-collapse: collapse; }
-  table.ttd td { width: 50%; vertical-align: top; text-align: center; }
-  .ttd-space { height: 60px; }
-  .signature-line { width: 74%; margin: 0 auto; padding-top: 4px; border-top: 1px solid #52677C; }
+  table.ttd td { width: 50%; vertical-align: top; text-align: left; }
+  .ttd-space { height: 48px; }
+  .signature-line { width: 90%; margin: 0; padding-top: 4px; border-top: 1px solid #52677C; }
   .notice { margin-top: 22px; padding: 8px 10px; border: 1px solid #DCE5EE; background: #F5F8FB; color: #52677C; font-size: 9px; text-align: center; }
 </style>
 </head>

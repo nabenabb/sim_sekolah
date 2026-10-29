@@ -20,14 +20,15 @@
            onchange="this.form.submit()">
   </form>
 
-  <div class="filter-bar">
+  <div class="filter-bar outgoing-filters" aria-label="Filter status surat keluar">
     <a href="{{ route('surat-keluar.index', array_filter(['status' => 'semua', 'q' => request('q')])) }}" class="chip {{ $status === 'semua' ? 'active' : '' }}">Semua</a>
     <a href="{{ route('surat-keluar.index', array_filter(['status' => 'draf', 'q' => request('q')])) }}" class="chip {{ $status === 'draf' ? 'active' : '' }}">Draf</a>
     <a href="{{ route('surat-keluar.index', array_filter(['status' => 'menunggu_ttd', 'q' => request('q')])) }}" class="chip {{ $status === 'menunggu_ttd' ? 'active' : '' }}">Menunggu TTD</a>
     <a href="{{ route('surat-keluar.index', array_filter(['status' => 'arsip', 'q' => request('q')])) }}" class="chip {{ in_array($status, ['arsip', 'terkirim']) ? 'active' : '' }}">Arsip (Terkirim)</a>
   </div>
 
-  <table>
+  <div class="outgoing-table-wrap" role="region" aria-label="Daftar surat keluar" tabindex="0">
+  <table class="outgoing-table">
     <thead><tr><th>No. Surat</th><th>Jenis</th><th>Tanggal</th><th>Tujuan</th><th>Perihal</th><th>Status</th><th></th></tr></thead>
     <tbody>
       @forelse ($letters as $letter)
@@ -71,6 +72,7 @@
       @endforelse
     </tbody>
   </table>
+  </div>
 
   @if ($letters->hasPages())
     <div style="display:flex;justify-content:center;gap:8px;padding:16px;">
@@ -177,11 +179,14 @@
     <div id="blokIzinSiswa" class="blok-jenis" style="display:none;">
       <div class="field-row">
         <div class="field">
-          <label>Siswa</label>
-          <select name="student_id">
+          <label for="studentSearch">Cari siswa</label>
+          <input type="search" id="studentSearch" placeholder="Ketik nama atau NIS siswa" autocomplete="off" aria-describedby="studentSearchHint">
+          <div class="hint" id="studentSearchHint" role="status" aria-live="polite">Ketik nama atau NIS untuk menyaring daftar siswa.</div>
+          <label for="studentSelect">Siswa</label>
+          <select name="student_id" id="studentSelect" aria-describedby="studentSearchHint">
             <option value="">&mdash; Pilih siswa &mdash;</option>
             @foreach ($students as $s)
-              <option value="{{ $s->id }}">{{ $s->nama }} &mdash; NIS {{ $s->nis }}</option>
+              <option value="{{ $s->id }}" @selected((string) old('student_id') === (string) $s->id)>{{ $s->nama }} &mdash; NIS {{ $s->nis }}</option>
             @endforeach
           </select>
         </div>
@@ -244,9 +249,35 @@
     document.getElementById(jenis === 'umum' ? 'blokUmum' : jenis === 'undangan' ? 'blokUndangan' : 'blokIzinSiswa').style.display = 'block';
 
     const isIzin = jenis === 'izin_siswa';
+    document.getElementById('studentSelect').required = isIzin;
     document.getElementById('btnDraf').style.display = isIzin ? 'none' : 'inline-flex';
     document.getElementById('btnAjukan').textContent = isIzin ? 'Simpan & Cetak' : 'Ajukan ke Kepala Sekolah';
   }
+
+  const studentSearch = document.getElementById('studentSearch');
+  const studentSelect = document.getElementById('studentSelect');
+  const studentSearchHint = document.getElementById('studentSearchHint');
+  const studentOptions = Array.from(studentSelect.options).slice(1);
+
+  studentSearch.addEventListener('input', () => {
+    const query = studentSearch.value.trim().toLocaleLowerCase('id-ID');
+    let visibleCount = 0;
+
+    studentOptions.forEach(option => {
+      const matches = option.textContent.toLocaleLowerCase('id-ID').includes(query);
+      option.hidden = !matches;
+      if (matches) {
+        visibleCount += 1;
+      }
+      if (!matches && option.selected) {
+        studentSelect.value = '';
+      }
+    });
+
+    studentSearchHint.textContent = query
+      ? (visibleCount > 0 ? `${visibleCount} siswa cocok. Pilih nama dari daftar.` : 'Tidak ada siswa yang cocok dengan nama atau NIS tersebut.')
+      : 'Ketik nama atau NIS untuk menyaring daftar siswa.';
+  });
 
   @if (! $editing)
     gantiJenis();

@@ -116,7 +116,7 @@
           </div>
           <div class="report-template-grid">
             @foreach ($importTypes as $type)
-              <a class="report-template" href="{{ route('laporan.template', $type) }}">
+              <a class="report-template" href="{{ route('laporan.template', $type) }}" download="template-impor-{{ $type }}.csv">
                 <span class="report-template__icon" aria-hidden="true">CSV</span>
                 <span class="report-template__copy"><strong>{{ $importLabels[$type] }}</strong><small>Template data {{ strtolower($importLabels[$type]) }}</small></span>
                 <span class="report-template__download" aria-hidden="true">↓</span>

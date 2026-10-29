@@ -9,8 +9,8 @@
   table { border-collapse: collapse; }
   .letterhead { width: 100%; }
   .letterhead td { vertical-align: middle; }
-  .logo-cell { width: 74px; text-align: center; }
-  .logo { width: 62px; height: 62px; object-fit: contain; }
+  .logo-cell { width: 86px; text-align: center; }
+  .logo { display: block; width: auto; height: 72px; margin: 0 auto; }
   .school { text-align: center; font-family: 'DejaVu Serif', serif; color: #111; }
   .school .province { font-size: 12px; font-weight: bold; }
   .school .office { margin-top: 2px; font-size: 13px; font-weight: bold; }
@@ -29,8 +29,8 @@
   .closing { margin-top: 18px; text-align: justify; }
   .signature { width: 100%; margin-top: 28px; }
   .signature td { vertical-align: top; }
-  .signature .signer { width: 42%; text-align: center; }
-  .signature-space { height: 62px; }
+  .signature .signer { width: 42%; text-align: left; }
+  .signature-space { height: 48px; }
   .status { position: fixed; top: 0; right: 0; border: 1px solid #B77A00; padding: 4px 9px; color: #9A6800; font-size: 8px; font-weight: bold; letter-spacing: 1px; }
   .reference { margin-top: 18px; color: #71859A; font-size: 8px; }
 </style>

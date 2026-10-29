@@ -174,7 +174,11 @@ class LaporanTransferController extends Controller
             fwrite($output, "\xEF\xBB\xBF");
             fputcsv($output, self::IMPORT_HEADERS[$type], ',', '"', '');
             fclose($output);
-        }, 'template-impor-' . $type . '.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        }, 'template-impor-' . $type . '.csv', [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="template-impor-' . $type . '.csv"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function import(Request $request): RedirectResponse
