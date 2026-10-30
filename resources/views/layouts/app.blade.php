@@ -163,7 +163,7 @@
     if (!content) return;
 
     const applyResponsiveTableLayout = table => {
-      if (!(table instanceof HTMLTableElement) || table.closest('.report-import__preview, .student-transfer__preview')) return;
+      if (!(table instanceof HTMLTableElement) || table.matches('.report-status-table') || table.closest('.report-import__preview, .student-transfer__preview')) return;
 
       const headerRow = table.tHead?.rows[table.tHead.rows.length - 1];
       if (!headerRow || !headerRow.cells.length) return;

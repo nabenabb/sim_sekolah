@@ -111,7 +111,7 @@
       <div class="modal-body">
         <div class="field"><label>Nama Lengkap</label><input type="text" name="name" value="{{ old('name') }}" required></div>
         <div class="field"><label>Email</label><input type="email" name="email" value="{{ old('email') }}" required></div>
-        <div class="field"><label>Password Awal</label><input type="text" name="password" placeholder="minimal 5 karakter" required></div>
+        <div class="field"><label>Password Awal</label><input type="text" name="password" placeholder="minimal 5 karakter" minlength="5" required></div>
         <div class="field-row">
           <div class="field">
             <label>Role</label>
@@ -161,7 +161,7 @@
               <label>Role</label>
               <select name="role_id" required>
                 @foreach ($roles as $r)
-                  <option value="{{ $r->id }}" {{ $u->role_id == $r->id ? 'selected' : '' }}>{{ $r->name }}</option>
+                  <option value="{{ $r->id }}" {{ $u->role->name === $r->name ? 'selected' : '' }}>{{ $r->name }}</option>
                 @endforeach
               </select>
             </div>
@@ -194,7 +194,7 @@
         </div>
         <div class="modal-body">
           <div class="hint" style="margin-bottom:14px;">Sandi lama langsung tidak berlaku begitu diganti. Beri tahu sandi baru ini ke yang bersangkutan secara langsung.</div>
-          <div class="field"><label>Sandi Baru</label><input type="text" name="password" placeholder="minimal 5 karakter" required></div>
+          <div class="field"><label>Sandi Baru</label><input type="text" name="password" placeholder="minimal 5 karakter" minlength="5" required></div>
         </div>
         <div class="modal-foot">
           <button type="button" class="btn btn-ghost" onclick="closeModal('modalReset{{ $u->id }}')">Batal</button>

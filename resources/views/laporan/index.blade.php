@@ -180,10 +180,10 @@
       </div>
     </div>
 
-    <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="grid-2 report-summary-grid">
       <div class="card card-pad">
         <div class="card-head"><h2>Surat Keluar per Status</h2></div>
-        <table>
+        <table class="report-status-table">
           <thead><tr><th>Status</th><th style="text-align:right;">Jumlah</th></tr></thead>
           <tbody>
             @forelse ($keluarByStatus as $st => $jml)
@@ -215,7 +215,7 @@
 
       <div class="card card-pad">
         <div class="card-head"><h2>Siswa PKL per Status</h2></div>
-        <table>
+        <table class="report-status-table">
           <thead><tr><th>Status</th><th style="text-align:right;">Jumlah</th></tr></thead>
           <tbody>
             @forelse ($pklByStatus as $st => $jml)

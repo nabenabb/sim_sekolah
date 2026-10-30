@@ -670,7 +670,23 @@ tbody tr.selected{ background: var(--primary-tint); }
 @media (max-width:520px){ .student-search{ grid-template-columns:1fr auto; } .student-search__query{ grid-column:1 / -1; } .student-search__select{ grid-column:1 / -1; } .student-search .btn{ justify-content:center; } .student-transfer__summary-action{ font-size:0; } .student-transfer__summary-action span{ font-size:16px; } .student-table{ min-width:620px; } }
 
 /* ---------- Mobile data tables ---------- */
+@media (max-width:980px){
+  .content .report-summary-grid{ grid-template-columns:minmax(0,1fr); }
+}
+
 @media (max-width:760px){
+  .content table.report-status-table{
+    display:table;
+    width:100%;
+    min-width:0;
+    overflow:visible;
+    border-collapse:collapse;
+    white-space:normal;
+  }
+  .content table.report-status-table tbody td{ padding:12px 8px; }
+  .content table.report-status-table tbody td:last-child{ width:86px; white-space:nowrap; }
+  .content table.report-status-table .pill{ max-width:100%; white-space:normal; }
+
   .content table.mobile-card-table{
     display:block;
     width:100%;

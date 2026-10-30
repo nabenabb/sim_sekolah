@@ -15,8 +15,8 @@
     @csrf
     <input type="hidden" name="token" value="{{ $token }}">
     <div class="field"><label>Email</label><input type="email" name="email" value="{{ old('email', $email) }}" required autocomplete="email"></div>
-    <div class="field"><label>Kata sandi baru</label><input type="password" name="password" required minlength="8" autocomplete="new-password"></div>
-    <div class="field"><label>Ulangi kata sandi baru</label><input type="password" name="password_confirmation" required minlength="8" autocomplete="new-password"></div>
+    <div class="field"><label>Kata sandi baru</label><input type="password" name="password" required minlength="5" autocomplete="new-password"></div>
+    <div class="field"><label>Ulangi kata sandi baru</label><input type="password" name="password_confirmation" required minlength="5" autocomplete="new-password"></div>
     <button type="submit" class="btn btn-primary btn-block">Simpan kata sandi</button>
   </form>
 </div></div></div>

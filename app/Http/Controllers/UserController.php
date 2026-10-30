@@ -13,6 +13,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $query = User::with(['role', 'programKeahlian']);
+        $roles = Role::orderBy('name')->orderBy('id')->get()->unique('name')->values();
 
         if ($request->filled('q')) {
             $keyword = $request->query('q');
@@ -22,7 +23,13 @@ class UserController extends Controller
         }
 
         if ($request->filled('role')) {
-            $query->where('role_id', $request->query('role'));
+            $roleName = Role::whereKey($request->query('role'))->value('name');
+
+            if ($roleName !== null) {
+                $query->whereHas('role', fn ($roleQuery) => $roleQuery->where('name', $roleName));
+            } else {
+                $query->where('role_id', $request->query('role'));
+            }
         }
 
         $statusFilter = $request->query('status', 'semua');
@@ -33,7 +40,6 @@ class UserController extends Controller
         }
 
         $users = $query->orderBy('name')->paginate(10)->withQueryString();
-        $roles = Role::orderBy('name')->get();
         $programKeahlian = ProgramKeahlian::orderBy('nama_jurusan')->get();
 
         return view('manajemen-pengguna.index', compact('users', 'roles', 'programKeahlian', 'statusFilter'));
@@ -44,7 +50,7 @@ class UserController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:100',
             'email' => 'required|email|max:100|unique:users,email',
-            'password' => 'required|string|min:8',
+            'password' => 'required|string|min:5',
             'role_id' => 'required|exists:roles,id',
             'program_keahlian_id' => 'nullable|exists:program_keahlian,id',
         ]);
@@ -78,7 +84,7 @@ class UserController extends Controller
     public function resetPassword(Request $request, User $user)
     {
         $data = $request->validate([
-            'password' => 'required|string|min:8',
+            'password' => 'required|string|min:5',
         ]);
 
         $user->update(['password_hash' => Hash::make($data['password'])]);
