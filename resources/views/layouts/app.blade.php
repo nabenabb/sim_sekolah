@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>@yield('title', 'Dashboard') — SIM Sekolah SMKN 4</title>
-<link rel="stylesheet" href="{{ asset('css/app.css') }}">
+<link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
 </head>
 <body>
 @php
@@ -156,6 +156,55 @@
     document.querySelector('.sidebar').classList.toggle('open');
     document.getElementById('sidebarBackdrop').classList.toggle('open');
   }
+</script>
+<script>
+  (() => {
+    const content = document.querySelector('.content');
+    if (!content) return;
+
+    const applyResponsiveTableLayout = table => {
+      if (!(table instanceof HTMLTableElement) || table.closest('.report-import__preview, .student-transfer__preview')) return;
+
+      const headerRow = table.tHead?.rows[table.tHead.rows.length - 1];
+      if (!headerRow || !headerRow.cells.length) return;
+
+      const headerCells = Array.from(headerRow.cells);
+      const labels = headerCells.map((cell, index) => {
+        const label = cell.textContent.replace(/\s+/g, ' ').trim();
+        return label || (index === headerCells.length - 1 ? 'Aksi' : `Kolom ${index + 1}`);
+      });
+
+      table.classList.add('mobile-card-table');
+      Array.from(table.tBodies).forEach(tbody => {
+        Array.from(tbody.rows).forEach(row => {
+          let columnIndex = 0;
+          Array.from(row.cells).forEach(cell => {
+            const columnSpan = cell.colSpan || 1;
+            if (columnSpan === 1 && labels[columnIndex]) {
+              cell.dataset.mobileLabel = labels[columnIndex];
+            } else {
+              cell.removeAttribute('data-mobile-label');
+            }
+            columnIndex += columnSpan;
+          });
+        });
+      });
+    };
+
+    const applyToNode = node => {
+      if (!(node instanceof Element)) return;
+      if (node.matches('table')) applyResponsiveTableLayout(node);
+      node.querySelectorAll('table').forEach(applyResponsiveTableLayout);
+      const parentTable = node.closest('table');
+      if (parentTable) applyResponsiveTableLayout(parentTable);
+    };
+
+    content.querySelectorAll('table').forEach(applyResponsiveTableLayout);
+
+    new MutationObserver(records => {
+      records.forEach(record => record.addedNodes.forEach(applyToNode));
+    }).observe(content, { childList: true, subtree: true });
+  })();
 </script>
 @yield('scripts')
 </body>
