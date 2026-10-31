@@ -69,14 +69,18 @@ class CertificateController extends Controller
             return back()->withErrors(['placement_id' => 'Data siswa atau mitra pada penempatan PKL tidak lengkap. Periksa data sebelum menerbitkan sertifikat.']);
         }
 
-        $nomor = $this->allocateNomor();
-        $token = Str::random(40);
-        $tanggalTerbit = now();
-        $path = 'sertifikat/' . Str::lower(str_replace('/', '-', $nomor)) . '.pdf';
-        $disk = Storage::disk('local');
+        $disk = null;
+        $path = null;
 
         try {
+            $disk = Storage::disk('local');
+            $nomor = $this->allocateNomor();
+            $token = Str::random(40);
+            $tanggalTerbit = now();
+            $path = 'sertifikat/' . Str::lower(str_replace('/', '-', $nomor)) . '.pdf';
             $pdfBinary = $this->renderPdf($this->certificatePdfData($placement, $nomor, $tanggalTerbit, $token));
+            $this->ensureValidPdf($pdfBinary);
+
             if (! $disk->put($path, $pdfBinary)) {
                 throw new RuntimeException('Unable to store the generated certificate PDF.');
             }
@@ -89,13 +93,15 @@ class CertificateController extends Controller
                 'qr_code' => $token,
             ]));
         } catch (Throwable $exception) {
-            try {
-                $disk->delete($path);
-            } catch (Throwable $cleanupException) {
-                Log::warning('certificate.cleanup_failed', [
-                    'placement_id' => $placement->id,
-                    'exception' => $cleanupException,
-                ]);
+            if ($path !== null && $disk !== null) {
+                try {
+                    $disk->delete($path);
+                } catch (Throwable $cleanupException) {
+                    Log::warning('certificate.cleanup_failed', [
+                        'placement_id' => $placement->id,
+                        'exception' => $cleanupException,
+                    ]);
+                }
             }
 
             Log::error('certificate.issue_failed', [
@@ -111,24 +117,40 @@ class CertificateController extends Controller
 
     public function download(Certificate $certificate): StreamedResponse
     {
-        abort_unless(in_array(auth()->user()->role->name, ['Admin', 'Waka Humas'], true), 403);
+        abort_unless(in_array(auth()->user()?->role?->name, ['Admin', 'Waka Humas'], true), 403);
 
-        $certificate->loadMissing('placement.student.programKeahlian', 'placement.partner');
-        $placement = $certificate->placement;
-        abort_unless($placement && $placement->student && $placement->partner, 404, 'Data sertifikat tidak lengkap.');
-
-        $disk = Storage::disk('local');
+        $disk = null;
+        $placement = null;
+        $pdfBinary = '';
+        $placementIsComplete = false;
 
         try {
-            $pdfBinary = $disk->exists($certificate->file_path) ? $disk->get($certificate->file_path) : '';
-            if (! str_starts_with($pdfBinary, '%PDF-')) {
-                $pdfBinary = $this->renderPdf($this->certificatePdfData(
-                    $placement,
-                    $certificate->nomor_sertifikat,
-                    $certificate->tanggal_terbit,
-                    $certificate->qr_code,
-                ));
-                $disk->put($certificate->file_path, $pdfBinary);
+            $disk = Storage::disk('local');
+            $certificate->loadMissing('placement.student.programKeahlian', 'placement.partner');
+            $placement = $certificate->placement;
+            $placementIsComplete = $placement && $placement->student && $placement->partner;
+
+            if ($placementIsComplete) {
+                $pdfBinary = $disk->exists($certificate->file_path) ? $disk->get($certificate->file_path) : '';
+
+                if (! str_starts_with($pdfBinary, '%PDF-')) {
+                    $pdfBinary = $this->renderPdf($this->certificatePdfData(
+                        $placement,
+                        $certificate->nomor_sertifikat,
+                        $certificate->tanggal_terbit,
+                        $certificate->qr_code,
+                    ));
+                    $this->ensureValidPdf($pdfBinary);
+
+                    if (! $disk->put($certificate->file_path, $pdfBinary)) {
+                        Log::warning('certificate.cache_write_failed', [
+                            'certificate_id' => $certificate->id,
+                            'path' => $certificate->file_path,
+                        ]);
+                    }
+                }
+
+                $this->ensureValidPdf($pdfBinary);
             }
         } catch (Throwable $exception) {
             Log::error('certificate.download_failed', [
@@ -138,6 +160,8 @@ class CertificateController extends Controller
 
             abort(503, 'Sertifikat belum dapat dibuat. Silakan coba lagi beberapa saat.');
         }
+
+        abort_unless($placementIsComplete, 404, 'Data sertifikat tidak lengkap.');
 
         return $this->streamPdf($pdfBinary, $certificate->nomor_sertifikat);
     }
@@ -241,6 +265,13 @@ class CertificateController extends Controller
             'Content-Type' => 'application/pdf',
             'X-Content-Type-Options' => 'nosniff',
         ]);
+    }
+
+    private function ensureValidPdf(string $pdfBinary): void
+    {
+        if (! str_starts_with($pdfBinary, '%PDF-')) {
+            throw new RuntimeException('Certificate PDF renderer returned an invalid document.');
+        }
     }
 
     private function renderPdf(array $data): string
