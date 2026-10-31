@@ -140,37 +140,12 @@
         </div>
       @endif
 
-      <div class="card card-pad">
-        <div class="card-head"><h2>Buat Disposisi</h2></div>
-        <form method="POST" action="{{ route('surat-masuk.disposisi.store', $selected->id) }}">
-          @csrf
-
-          <div class="field">
-            <label>Diteruskan Kepada Sdr.</label>
-            <div class="checkbox-grid">
-              @foreach (\App\Models\Disposition::ROLE_PENERIMA as $roleName)
-                <label class="checkbox-item">
-                  <input type="checkbox" name="tujuan[]" value="{{ $roleName }}"> {{ $roleName }}
-                </label>
-              @endforeach
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Dengan Hormat Harap</label>
-            <div class="checkbox-grid">
-              <label class="checkbox-item"><input type="checkbox" name="instruksi[]" value="Tanggapan dan saran"> Tanggapan dan saran</label>
-              <label class="checkbox-item"><input type="checkbox" name="instruksi[]" value="Proses lebih lanjut"> Proses lebih lanjut</label>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Catatan</label>
-            <textarea name="catatan" placeholder="Tulis arahan tambahan..."></textarea>
-          </div>
-
-          <button type="submit" class="btn btn-primary btn-block">Kirim Disposisi</button>
-        </form>
+      <div class="card card-pad disposition-launch">
+        <div>
+          <h2>Buat Disposisi</h2>
+          <div class="sub">Teruskan surat ini kepada role yang perlu menindaklanjuti.</div>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="openModal('modalBuatDisposisi')">Buat Disposisi</button>
       </div>
     @else
       <div class="card card-pad">
@@ -181,6 +156,56 @@
     @endif
   </div>
 </div>
+
+@if ($selected)
+  @php $dispositionModalOpen = $errors->has('tujuan') || $errors->has('instruksi'); @endphp
+  <div class="modal-overlay {{ $dispositionModalOpen ? 'open' : '' }}" id="modalBuatDisposisi">
+    <div class="modal-card modal-card--wide" role="dialog" aria-modal="true" aria-labelledby="dispositionModalTitle">
+      <form method="POST" action="{{ route('surat-masuk.disposisi.store', $selected->id) }}">
+        @csrf
+        <div class="modal-head">
+          <div>
+            <h2 id="dispositionModalTitle">Buat Disposisi</h2>
+            <div class="sub">{{ $selected->no_agenda }} · {{ $selected->perihal }}</div>
+          </div>
+          <button type="button" class="modal-close" onclick="closeModal('modalBuatDisposisi')" aria-label="Tutup">&times;</button>
+        </div>
+        <div class="modal-body">
+          @if ($errors->has('tujuan') || $errors->has('instruksi'))
+            <div role="alert" style="background:var(--danger-tint);color:var(--danger);border-radius:var(--radius-control);padding:10px 14px;font-size:13px;margin-bottom:14px;">
+              {{ $errors->first() }}
+            </div>
+          @endif
+          <div class="field">
+            <label>Diteruskan Kepada</label>
+            <div class="checkbox-grid">
+              @foreach (\App\Models\Disposition::ROLE_PENERIMA as $roleName)
+                <label class="checkbox-item">
+                  <input type="checkbox" name="tujuan[]" value="{{ $roleName }}" @checked(in_array($roleName, (array) old('tujuan', []), true))> {{ $roleName }}
+                </label>
+              @endforeach
+            </div>
+          </div>
+          <div class="field">
+            <label>Dengan Hormat Harap</label>
+            <div class="checkbox-grid">
+              <label class="checkbox-item"><input type="checkbox" name="instruksi[]" value="Tanggapan dan saran" @checked(in_array('Tanggapan dan saran', (array) old('instruksi', []), true))> Tanggapan dan saran</label>
+              <label class="checkbox-item"><input type="checkbox" name="instruksi[]" value="Proses lebih lanjut" @checked(in_array('Proses lebih lanjut', (array) old('instruksi', []), true))> Proses lebih lanjut</label>
+            </div>
+          </div>
+          <div class="field">
+            <label for="dispositionNote">Catatan</label>
+            <textarea id="dispositionNote" name="catatan" placeholder="Tulis arahan tambahan...">{{ old('catatan') }}</textarea>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('modalBuatDisposisi')">Batal</button>
+          <button type="submit" class="btn btn-primary">Kirim Disposisi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+@endif
 
 {{-- ================= MODAL CATAT SURAT BARU ================= --}}
 <div class="modal-overlay" id="modalSuratMasuk">

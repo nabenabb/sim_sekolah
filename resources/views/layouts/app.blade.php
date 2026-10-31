@@ -88,20 +88,20 @@
                  style="border:none;background:none;font:inherit;font-size:13px;color:inherit;outline:none;width:120px;">
         </form>
 
-        <div style="position:relative;">
-          <button type="button" class="bell" onclick="toggleNotif(event)" style="cursor:pointer;border:none;">
+        <div class="notification-menu">
+          <button type="button" class="bell notification-menu__button" onclick="toggleNotif(event)" aria-label="Buka notifikasi" aria-expanded="false" aria-controls="notifPanel">
             <span class="ic">&#128276;</span>
             @if ($notifCount > 0)<span class="dot"></span>@endif
           </button>
-          <div id="notifPanel" style="display:none;position:absolute;right:0;top:calc(100% + 10px);width:320px;background:#fff;border:1px solid var(--border);border-radius:var(--radius-card);box-shadow:0 12px 28px rgba(16,37,61,0.18);z-index:50;overflow:hidden;">
-            <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:13.5px;font-weight:700;">Notifikasi ({{ $notifCount }})</div>
-            <div style="max-height:320px;overflow-y:auto;">
+          <div id="notifPanel" class="notification-panel" aria-label="Daftar notifikasi">
+            <div class="notification-panel__title">Notifikasi ({{ $notifCount }})</div>
+            <div class="notification-panel__items">
               @forelse ($notifItems as $n)
-                <a href="{{ $n['url'] }}" style="display:block;padding:11px 16px;font-size:12.5px;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--border-soft, var(--border));">
+                <a href="{{ $n['url'] }}" class="notification-panel__item">
                   {{ $n['label'] }}
                 </a>
               @empty
-                <div style="padding:16px;font-size:12.5px;color:var(--ink-faint);text-align:center;">Tidak ada notifikasi baru.</div>
+                <div class="notification-panel__empty">Tidak ada notifikasi baru.</div>
               @endforelse
             </div>
           </div>
@@ -141,14 +141,30 @@
 </div>
 
 <script>
+  (() => {
+    const syncModalScrollLock = () => {
+      document.body.style.overflow = document.querySelector('.modal-overlay.open') ? 'hidden' : '';
+    };
+
+    syncModalScrollLock();
+    new MutationObserver(syncModalScrollLock).observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class'],
+      subtree: true,
+    });
+  })();
+
   function toggleNotif(e) {
     e.stopPropagation();
     const panel = document.getElementById('notifPanel');
-    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    const isOpen = panel.classList.toggle('is-open');
+    e.currentTarget.setAttribute('aria-expanded', String(isOpen));
   }
   document.addEventListener('click', () => {
     const panel = document.getElementById('notifPanel');
-    if (panel) panel.style.display = 'none';
+    const button = document.querySelector('.notification-menu__button');
+    if (panel) panel.classList.remove('is-open');
+    if (button) button.setAttribute('aria-expanded', 'false');
   });
 </script>
 <script>

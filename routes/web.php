@@ -7,7 +7,6 @@ use App\Http\Controllers\IncomingLetterController;
 use App\Http\Controllers\IndustryPartnerController;
 use App\Http\Controllers\MyDispositionController;
 use App\Http\Controllers\OutgoingLetterController;
-use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PrivateFileController;
 use App\Http\Controllers\PklPlacementController;
 use App\Http\Controllers\SearchController;
@@ -23,10 +22,6 @@ Route::get('/', fn () => redirect()->route('login'));
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
-Route::get('/forgot-password', [PasswordResetController::class, 'requestForm'])->name('password.request');
-Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('password.email');
-Route::get('/reset-password/{token}', [PasswordResetController::class, 'resetForm'])->name('password.reset');
-Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:5,1')->name('password.update');
 
 // Halaman PUBLIK (tanpa login): dibuka saat QR di sertifikat di-scan
 Route::get('/verifikasi/{token}', [CertificateController::class, 'verify'])->name('sertifikat.verify');

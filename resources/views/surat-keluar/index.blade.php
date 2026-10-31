@@ -10,7 +10,7 @@
 <div class="card card-pad">
   <div class="card-head">
     <div><h2>Daftar Surat Keluar</h2><div class="sub">Draf, menunggu tanda tangan, hingga terkirim</div></div>
-    <button class="btn btn-primary btn-sm" onclick="document.getElementById('form-surat-keluar').scrollIntoView({behavior:'smooth'})">+ Buat Surat Keluar</button>
+    <button type="button" class="btn btn-primary btn-sm" onclick="openModal('modalFormSuratKeluar')">+ Buat Surat Keluar</button>
   </div>
 
   <form method="GET" action="{{ route('surat-keluar.index') }}" style="margin-bottom:14px;">
@@ -47,7 +47,7 @@
           <td style="white-space:nowrap;">
             <a class="link-more" href="#" onclick="openModal('modalLihat{{ $letter->id }}');return false;">Lihat</a>
             @if ($letter->status === 'draf')
-              &nbsp;·&nbsp;<a class="link-more" href="{{ route('surat-keluar.index', ['edit' => $letter->id]) }}">Edit</a>
+              &nbsp;·&nbsp;<a class="link-more" href="{{ route('surat-keluar.index', array_filter(['edit' => $letter->id, 'status' => $status, 'q' => request('q')])) }}">Edit</a>
             @endif
             @if ($letter->status === 'menunggu_ttd' && auth()->user()->role->name === 'Kepala Sekolah')
               &nbsp;·&nbsp;
@@ -92,16 +92,24 @@
 </div>
 
 {{-- ================= FORM BUAT / EDIT SURAT KELUAR ================= --}}
-<div class="card card-pad" id="form-surat-keluar" style="margin-top:20px;max-width:760px;">
-  <div class="card-head"><h2>{{ $editing ? 'Edit Surat Keluar' : 'Buat Surat Keluar' }}</h2></div>
-
-  @if ($errors->any())
-    <div style="background:var(--danger-tint);color:var(--danger);border-radius:var(--radius-control);padding:10px 14px;font-size:13px;margin-bottom:14px;">
-      {{ $errors->first() }}
-    </div>
-  @endif
-
+@php $formModalOpen = $editing || $errors->any(); @endphp
+<div class="modal-overlay {{ $formModalOpen ? 'open' : '' }}" id="modalFormSuratKeluar">
+  <div class="modal-card modal-card--wide" role="dialog" aria-modal="true" aria-labelledby="outgoingFormTitle">
   <form method="POST" action="{{ $editing ? route('surat-keluar.update', $editing->id) : route('surat-keluar.store') }}" enctype="multipart/form-data">
+    <div class="modal-head">
+      <h2 id="outgoingFormTitle">{{ $editing ? 'Edit Surat Keluar' : 'Buat Surat Keluar' }}</h2>
+      @if ($editing)
+        <a class="modal-close" href="{{ route('surat-keluar.index', array_filter(['status' => $status, 'q' => request('q')])) }}" aria-label="Tutup">&times;</a>
+      @else
+        <button type="button" class="modal-close" onclick="closeModal('modalFormSuratKeluar')" aria-label="Tutup">&times;</button>
+      @endif
+    </div>
+    <div class="modal-body">
+    @if ($errors->any())
+      <div role="alert" style="background:var(--danger-tint);color:var(--danger);border-radius:var(--radius-control);padding:10px 14px;font-size:13px;margin-bottom:14px;">
+        {{ $errors->first() }}
+      </div>
+    @endif
     @csrf
     @if ($editing) @method('PUT') @endif
 
@@ -116,9 +124,9 @@
       <div class="field">
         <label>Jenis Surat</label>
         <select name="jenis_template" id="jenisTemplate" onchange="gantiJenis()">
-          <option value="umum">Surat Umum (upload manual)</option>
-          <option value="undangan">Surat Undangan (kop resmi, TTD Kepala Sekolah)</option>
-          <option value="izin_siswa">Surat Izin Siswa Keluar (langsung cetak)</option>
+          <option value="umum" @selected(old('jenis_template', 'umum') === 'umum')>Surat Umum (upload manual)</option>
+          <option value="undangan" @selected(old('jenis_template') === 'undangan')>Surat Undangan (kop resmi, TTD Kepala Sekolah)</option>
+          <option value="izin_siswa" @selected(old('jenis_template') === 'izin_siswa')>Surat Izin Siswa Keluar (langsung cetak)</option>
         </select>
       </div>
     @endif
@@ -128,17 +136,17 @@
       <select name="ref_incoming_letter_id">
         <option value="">&mdash; Tidak berdasarkan surat masuk &mdash;</option>
         @foreach ($incomingLetters as $inc)
-          <option value="{{ $inc->id }}" {{ optional($editing)->ref_incoming_letter_id == $inc->id ? 'selected' : '' }}>{{ $inc->no_agenda }} &mdash; {{ $inc->perihal }}</option>
+        <option value="{{ $inc->id }}" @selected(old('ref_incoming_letter_id', optional($editing)->ref_incoming_letter_id) == $inc->id)>{{ $inc->no_agenda }} &mdash; {{ $inc->perihal }}</option>
         @endforeach
       </select>
     </div>
-    <div class="field"><label>Tanggal Surat</label><input type="date" name="tanggal" value="{{ optional($editing)->tanggal?->format('Y-m-d') }}" required></div>
+    <div class="field"><label>Tanggal Surat</label><input type="date" name="tanggal" value="{{ old('tanggal', optional($editing)->tanggal?->format('Y-m-d')) }}" required></div>
 
     {{-- ============ BLOK: SURAT UMUM ============ --}}
     <div id="blokUmum" class="blok-jenis">
-      <div class="field"><label>Alamat Tujuan</label><input type="text" name="tujuan" value="{{ $editing && $editing->jenis_template === 'umum' ? $editing->tujuan : '' }}" placeholder="mis. PT Nusantara Digital Karya"></div>
-      <div class="field"><label>Perihal</label><input type="text" name="perihal" value="{{ $editing && $editing->jenis_template === 'umum' ? $editing->perihal : '' }}" placeholder="mis. Balasan Permohonan Kerja Sama"></div>
-      <div class="field"><label>Isi Ringkas</label><textarea name="isi_ringkas" placeholder="Ringkasan isi surat...">{{ $editing && $editing->jenis_template === 'umum' ? $editing->isi_ringkas : '' }}</textarea></div>
+      <div class="field"><label>Alamat Tujuan</label><input type="text" name="tujuan" value="{{ old('tujuan', $editing && $editing->jenis_template === 'umum' ? $editing->tujuan : '') }}" placeholder="mis. PT Nusantara Digital Karya"></div>
+      <div class="field"><label>Perihal</label><input type="text" name="perihal" value="{{ old('perihal', $editing && $editing->jenis_template === 'umum' ? $editing->perihal : '') }}" placeholder="mis. Balasan Permohonan Kerja Sama"></div>
+      <div class="field"><label>Isi Ringkas</label><textarea name="isi_ringkas" placeholder="Ringkasan isi surat...">{{ old('isi_ringkas', $editing && $editing->jenis_template === 'umum' ? $editing->isi_ringkas : '') }}</textarea></div>
       <div class="field">
         <label>Lampiran <span class="hint">(opsional)</span></label>
         <input type="file" name="lampiran" accept=".jpg,.jpeg,.png,.pdf">
@@ -150,28 +158,28 @@
     @php $dt = optional($editing)->data_template ?? []; @endphp
     <div id="blokUndangan" class="blok-jenis" style="display:none;">
       <div class="field-row">
-        <div class="field"><label>Ditujukan Kepada</label><input type="text" name="tujuan" value="{{ $editing && $editing->jenis_template === 'undangan' ? $editing->tujuan : '' }}" placeholder="mis. Bapak/Ibu orang tua/wali murid kelas X"></div>
-        <div class="field"><label>Lokasi Tujuan</label><input type="text" name="lokasi_tujuan" value="{{ $dt['lokasi_tujuan'] ?? 'Tanjungpinang' }}"></div>
+        <div class="field"><label>Ditujukan Kepada</label><input type="text" name="tujuan" value="{{ old('tujuan', $editing && $editing->jenis_template === 'undangan' ? $editing->tujuan : '') }}" placeholder="mis. Bapak/Ibu orang tua/wali murid kelas X"></div>
+        <div class="field"><label>Lokasi Tujuan</label><input type="text" name="lokasi_tujuan" value="{{ old('lokasi_tujuan', $dt['lokasi_tujuan'] ?? 'Tanjungpinang') }}"></div>
       </div>
-      <div class="field"><label>Perihal</label><input type="text" name="perihal" value="{{ $editing && $editing->jenis_template === 'undangan' ? $editing->perihal : '' }}" placeholder="mis. Undangan Pengambilan Rapor"></div>
+      <div class="field"><label>Perihal</label><input type="text" name="perihal" value="{{ old('perihal', $editing && $editing->jenis_template === 'undangan' ? $editing->perihal : '') }}" placeholder="mis. Undangan Pengambilan Rapor"></div>
       <div class="field-row">
         <div class="field">
           <label>Sifat</label>
           <select name="sifat">
             @foreach (['Biasa','Segera','Sangat Segera','Rahasia'] as $s)
-              <option value="{{ $s }}" {{ ($dt['sifat'] ?? 'Biasa') === $s ? 'selected' : '' }}>{{ $s }}</option>
+              <option value="{{ $s }}" @selected(old('sifat', $dt['sifat'] ?? 'Biasa') === $s)>{{ $s }}</option>
             @endforeach
           </select>
         </div>
-        <div class="field"><label>Lampiran <span class="hint">(keterangan teks, mis. "-")</span></label><input type="text" name="lampiran_keterangan" value="{{ $dt['lampiran'] ?? '-' }}"></div>
+        <div class="field"><label>Lampiran <span class="hint">(keterangan teks, mis. "-")</span></label><input type="text" name="lampiran_keterangan" value="{{ old('lampiran_keterangan', $dt['lampiran'] ?? '-') }}"></div>
       </div>
-      <div class="field"><label>Paragraf Pembuka</label><textarea name="pembuka" placeholder="Sehubungan dengan...">{{ $dt['pembuka'] ?? '' }}</textarea></div>
+      <div class="field"><label>Paragraf Pembuka</label><textarea name="pembuka" placeholder="Sehubungan dengan...">{{ old('pembuka', $dt['pembuka'] ?? '') }}</textarea></div>
       <div class="field-row">
-        <div class="field"><label>Hari, Tanggal Acara</label><input type="text" name="hari_tanggal" value="{{ $dt['hari_tanggal'] ?? '' }}" placeholder="mis. Jumat, 19 Desember 2025"></div>
-        <div class="field"><label>Pukul</label><input type="text" name="pukul" value="{{ $dt['pukul'] ?? '' }}" placeholder="mis. 08.00 s.d. 09.30"></div>
+        <div class="field"><label>Hari, Tanggal Acara</label><input type="text" name="hari_tanggal" value="{{ old('hari_tanggal', $dt['hari_tanggal'] ?? '') }}" placeholder="mis. Jumat, 19 Desember 2025"></div>
+        <div class="field"><label>Pukul</label><input type="text" name="pukul" value="{{ old('pukul', $dt['pukul'] ?? '') }}" placeholder="mis. 08.00 s.d. 09.30"></div>
       </div>
-      <div class="field"><label>Tempat</label><input type="text" name="tempat" value="{{ $dt['tempat'] ?? '' }}" placeholder="mis. SMK Negeri 4 Tanjungpinang"></div>
-      <div class="field"><label>Paragraf Penutup</label><textarea name="penutup" placeholder="Atas perhatian...">{{ $dt['penutup'] ?? '' }}</textarea></div>
+      <div class="field"><label>Tempat</label><input type="text" name="tempat" value="{{ old('tempat', $dt['tempat'] ?? '') }}" placeholder="mis. SMK Negeri 4 Tanjungpinang"></div>
+      <div class="field"><label>Paragraf Penutup</label><textarea name="penutup" placeholder="Atas perhatian...">{{ old('penutup', $dt['penutup'] ?? '') }}</textarea></div>
       <div class="hint">PDF surat dibuat otomatis begitu disimpan &mdash; tidak perlu upload manual.</div>
     </div>
 
@@ -186,26 +194,32 @@
           <select name="student_id" id="studentSelect" aria-describedby="studentSearchHint">
             <option value="">&mdash; Pilih siswa &mdash;</option>
             @foreach ($students as $s)
-              <option value="{{ $s->id }}" @selected((string) old('student_id') === (string) $s->id)>{{ $s->nama }} &mdash; NIS {{ $s->nis }}</option>
+            <option value="{{ $s->id }}" @selected((string) old('student_id') === (string) $s->id)>{{ $s->nama }} &mdash; NIS {{ $s->nis }}</option>
             @endforeach
           </select>
         </div>
-        <div class="field"><label>Kelas</label><input type="text" name="kelas" placeholder="mis. XII RPL 2"></div>
+        <div class="field"><label>Kelas</label><input type="text" name="kelas" value="{{ old('kelas') }}" placeholder="mis. XII RPL 2"></div>
       </div>
-      <div class="field"><label>Tujuan Izin</label><input type="text" name="tujuan_izin" placeholder="mis. Ke gedung daerah, HUT Provinsi"></div>
+      <div class="field"><label>Tujuan Izin</label><input type="text" name="tujuan_izin" value="{{ old('tujuan_izin') }}" placeholder="mis. Ke gedung daerah, HUT Provinsi"></div>
       <div class="field-row">
-        <div class="field"><label>Jam Keluar</label><input type="text" name="jam_keluar" placeholder="mis. 12.30"></div>
-        <div class="field"><label>Jam Kembali</label><input type="text" name="jam_kembali" placeholder="mis. Selesai"></div>
+        <div class="field"><label>Jam Keluar</label><input type="text" name="jam_keluar" value="{{ old('jam_keluar') }}" placeholder="mis. 12.30"></div>
+        <div class="field"><label>Jam Kembali</label><input type="text" name="jam_kembali" value="{{ old('jam_kembali') }}" placeholder="mis. Selesai"></div>
       </div>
       <div class="hint">Surat izin siswa langsung berstatus "Terkirim" dan siap dicetak, tidak lewat alur draf/TTD Kepala Sekolah &mdash; sesuai kebutuhan izin dadakan yang ditandatangani langsung oleh Guru Piket.</div>
     </div>
 
-    <div class="row" style="justify-content:flex-end;margin-top:16px;">
-      @if ($editing)<a href="{{ route('surat-keluar.index') }}" class="btn btn-ghost">Batal</a>@endif
+    </div>
+    <div class="modal-foot">
+      @if ($editing)
+        <a href="{{ route('surat-keluar.index', array_filter(['status' => $status, 'q' => request('q')])) }}" class="btn btn-ghost">Batal</a>
+      @else
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modalFormSuratKeluar')">Batal</button>
+      @endif
       <button type="submit" name="simpan_draf" value="1" class="btn btn-ghost" id="btnDraf">Simpan Draf</button>
       <button type="submit" name="ajukan" value="1" class="btn btn-primary" id="btnAjukan">Ajukan ke Kepala Sekolah</button>
     </div>
   </form>
+  </div>
 </div>
 
 {{-- ================= MODAL DETAIL PER SURAT ================= --}}

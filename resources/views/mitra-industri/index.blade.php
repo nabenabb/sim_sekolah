@@ -114,7 +114,7 @@
 
 {{-- ================= MODAL TAMBAH MITRA ================= --}}
 <div class="modal-overlay" id="modalMitra">
-  <div class="modal-card" style="max-width:680px;">
+  <div class="modal-card modal-card--large">
     <form method="POST" action="{{ route('mitra-industri.store') }}" enctype="multipart/form-data">
       @csrf
       <div class="modal-head">
@@ -171,7 +171,7 @@
 {{-- ================= MODAL DETAIL PER MITRA ================= --}}
 @foreach ($partners as $partner)
   <div class="modal-overlay" id="modalLihat{{ $partner->id }}">
-    <div class="modal-card" style="max-width:640px;">
+    <div class="modal-card">
       <div class="modal-head">
         <h2>{{ $partner->nama_perusahaan }}</h2>
         <button type="button" class="modal-close" onclick="closeModal('modalLihat{{ $partner->id }}')">&times;</button>
@@ -224,7 +224,7 @@
     $mulaiDefault = $terakhir ? $terakhir->berlaku_selesai->copy()->addDay()->format('Y-m-d') : now()->format('Y-m-d');
   @endphp
   <div class="modal-overlay" id="modalPerpanjang{{ $partner->id }}">
-    <div class="modal-card" style="max-width:600px;">
+    <div class="modal-card modal-card--medium">
       <form method="POST" action="{{ route('mitra-industri.dokumen.store', $partner->id) }}" enctype="multipart/form-data">
         @csrf
         <div class="modal-head">

@@ -137,7 +137,7 @@
 
 {{-- Modal Tambah / Edit --}}
 <div class="modal-overlay {{ $editing || ($errors->any() && ! request('edit') && old('nama')) ? 'open' : '' }}" id="modalSiswa">
-  <div class="modal-card" style="max-width:520px;">
+  <div class="modal-card modal-card--compact">
     <form method="POST" action="{{ $editing ? route('siswa.update', $editing) : route('siswa.store') }}">
       @csrf
       @if ($editing) @method('PUT') @endif

@@ -44,7 +44,6 @@
         <div class="field">
           <label>Kata Sandi</label>
           <input type="password" name="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required>
-          <div class="hint"><a href="{{ route('password.request') }}" style="color:var(--primary);font-weight:600;">Lupa kata sandi?</a></div>
         </div>
         <button type="submit" class="btn btn-primary btn-block">Masuk</button>
       </form>
