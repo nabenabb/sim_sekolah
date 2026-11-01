@@ -84,6 +84,11 @@
             </div>
           </div>
           <div class="hint" style="margin-top:10px;">QR asli dibuat saat sertifikat diterbitkan; gambar di atas hanya ilustrasi.</div>
+          <form method="GET" action="{{ route('sertifikat.preview-draft') }}" target="_blank" style="margin-top:14px;">
+            <input type="hidden" name="placement_id" id="previewPlacementId" value="{{ old('placement_id', $selectedId ?? $eligible->first()?->id) }}">
+            <button type="submit" class="btn btn-ghost" {{ $eligible->isEmpty() ? 'disabled' : '' }}>Pratinjau PDF Lengkap</button>
+          </form>
+          <div class="hint" style="margin-top:8px;">Nomor dan QR pada PDF pratinjau hanya sementara; QR aktif dibuat saat sertifikat diterbitkan.</div>
         </section>
       </div>
     </div>
@@ -97,7 +102,7 @@
 {{-- ================= DAFTAR SERTIFIKAT TERBIT ================= --}}
 <div class="card card-pad" style="margin-top:20px;">
   <div class="card-head">
-    <div><h2>Sertifikat yang Sudah Terbit</h2><div class="sub">Unduh PDF atau buka halaman verifikasi publik (yang muncul saat QR di-scan)</div></div>
+    <div><h2>Sertifikat yang Sudah Terbit</h2><div class="sub">Pratinjau atau unduh PDF, atau buka halaman verifikasi publik</div></div>
   </div>
   <table>
     <thead><tr><th>Nomor Sertifikat</th><th>Nama Siswa</th><th>Industri</th><th>Tanggal Terbit</th><th></th></tr></thead>
@@ -109,6 +114,8 @@
           <td>{{ $c->placement->partner->nama_perusahaan }}</td>
           <td>{{ $c->tanggal_terbit->translatedFormat('d M Y') }}</td>
           <td style="white-space:nowrap;">
+            <a class="link-more" href="{{ route('sertifikat.preview', $c->id) }}" target="_blank" rel="noopener">Pratinjau PDF</a>
+            &nbsp;·&nbsp;
             <a class="link-more" href="{{ route('sertifikat.download', $c->id) }}">Unduh PDF</a>
             &nbsp;·&nbsp;
             <a class="link-more" href="{{ route('sertifikat.verify', $c->qr_code) }}" target="_blank">Halaman Verifikasi</a>
@@ -151,6 +158,7 @@
 @section('scripts')
 <script>
   const sel = document.getElementById('placementSelect');
+  const previewPlacementId = document.getElementById('previewPlacementId');
 
   function openModal(id) {
     const modal = document.getElementById(id);
@@ -174,6 +182,7 @@
     document.getElementById('p-nis').textContent = d.nis;
     document.getElementById('p-industri').textContent = d.industri || '—';
     document.getElementById('p-periode').textContent = d.periode;
+    if (previewPlacementId) previewPlacementId.value = sel.value;
   }
 
   sel?.addEventListener('change', refreshPreview);

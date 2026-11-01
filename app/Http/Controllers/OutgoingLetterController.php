@@ -217,7 +217,10 @@ class OutgoingLetterController extends Controller
 
         return response()->streamDownload(static function () use ($pdf): void {
             echo $pdf;
-        }, $filename, ['Content-Type' => 'application/pdf']);
+        }, $filename, [
+            'Content-Type' => 'application/pdf',
+            'X-Content-Type-Options' => 'nosniff',
+        ], 'inline');
     }
 
     private function renderPdf(OutgoingLetter $letter): string

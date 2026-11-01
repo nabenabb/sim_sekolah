@@ -121,7 +121,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::delete('/pkl/{placement}', [PklPlacementController::class, 'destroy'])->name('pkl.destroy');
 
         Route::get('/sertifikat', [CertificateController::class, 'index'])->name('sertifikat.index');
+        Route::get('/sertifikat/pratinjau-draft', [CertificateController::class, 'previewDraft'])->name('sertifikat.preview-draft');
         Route::post('/sertifikat', [CertificateController::class, 'store'])->name('sertifikat.store');
+        Route::get('/sertifikat/{certificate}/pratinjau', [CertificateController::class, 'preview'])->name('sertifikat.preview');
         Route::get('/sertifikat/{certificate}/unduh', [CertificateController::class, 'download'])->name('sertifikat.download');
         Route::delete('/sertifikat/{certificate}', [CertificateController::class, 'destroy'])->name('sertifikat.destroy');
     });

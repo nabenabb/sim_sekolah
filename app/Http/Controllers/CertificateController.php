@@ -43,6 +43,25 @@ class CertificateController extends Controller
         return view('sertifikat.index', compact('eligible', 'issued', 'selectedId', 'nomorBerikut'));
     }
 
+    public function previewDraft(Request $request): StreamedResponse
+    {
+        $data = $request->validate([
+            'placement_id' => 'required|exists:pkl_placements,id',
+        ]);
+
+        $placement = PklPlacement::with(['student.programKeahlian', 'partner'])
+            ->findOrFail($data['placement_id']);
+
+        abort_unless($placement->status === 'selesai' && $placement->nilai !== null, 422, 'Penempatan PKL ini belum siap diterbitkan sertifikatnya.');
+        abort_if(Certificate::withTrashed()->where('placement_id', $placement->id)->exists(), 409, 'Sertifikat untuk penempatan ini sudah pernah diterbitkan.');
+
+        $nomor = $this->nextNomor();
+        $pdfBinary = $this->renderPdf($this->certificatePdfData($placement, $nomor, now(), Str::random(40)));
+        $this->ensureValidPdf($pdfBinary);
+
+        return $this->streamPdf($pdfBinary, $nomor, 'inline');
+    }
+
     public function store(Request $request): RedirectResponse|StreamedResponse
     {
         $request->validate(['placement_id' => 'required|exists:pkl_placements,id']);
@@ -112,7 +131,17 @@ class CertificateController extends Controller
         return $this->streamPdf($pdfBinary, $nomor);
     }
 
+    public function preview(Certificate $certificate): StreamedResponse
+    {
+        return $this->respondWithPdf($certificate, 'inline');
+    }
+
     public function download(Certificate $certificate): StreamedResponse
+    {
+        return $this->respondWithPdf($certificate, 'attachment');
+    }
+
+    private function respondWithPdf(Certificate $certificate, string $disposition): StreamedResponse
     {
         abort_unless(in_array(auth()->user()?->role?->name, ['Admin', 'Waka Humas'], true), 403);
 
@@ -158,7 +187,7 @@ class CertificateController extends Controller
 
         abort_unless($placementIsComplete, 404, 'Data sertifikat tidak lengkap.');
 
-        return $this->streamPdf($pdfBinary, $certificate->nomor_sertifikat);
+        return $this->streamPdf($pdfBinary, $certificate->nomor_sertifikat, $disposition);
     }
 
     // Halaman publik (tanpa login) yang dibuka saat QR di-scan
@@ -250,7 +279,7 @@ class CertificateController extends Controller
         ];
     }
 
-    private function streamPdf(string $pdfBinary, string $nomor): StreamedResponse
+    private function streamPdf(string $pdfBinary, string $nomor, string $disposition = 'attachment'): StreamedResponse
     {
         $filename = str_replace('/', '-', $nomor) . '.pdf';
 
@@ -259,7 +288,7 @@ class CertificateController extends Controller
         }, $filename, [
             'Content-Type' => 'application/pdf',
             'X-Content-Type-Options' => 'nosniff',
-        ]);
+        ], $disposition);
     }
 
     private function certificateFileAbsolutePath(string $path): string
