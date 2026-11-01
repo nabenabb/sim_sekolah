@@ -16,7 +16,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -69,11 +68,9 @@ class CertificateController extends Controller
             return back()->withErrors(['placement_id' => 'Data siswa atau mitra pada penempatan PKL tidak lengkap. Periksa data sebelum menerbitkan sertifikat.']);
         }
 
-        $disk = null;
         $path = null;
 
         try {
-            $disk = Storage::disk('local');
             $nomor = $this->allocateNomor();
             $token = Str::random(40);
             $tanggalTerbit = now();
@@ -81,7 +78,7 @@ class CertificateController extends Controller
             $pdfBinary = $this->renderPdf($this->certificatePdfData($placement, $nomor, $tanggalTerbit, $token));
             $this->ensureValidPdf($pdfBinary);
 
-            if (! $disk->put($path, $pdfBinary)) {
+            if (! $this->writeCertificateFile($path, $pdfBinary)) {
                 throw new RuntimeException('Unable to store the generated certificate PDF.');
             }
 
@@ -93,9 +90,9 @@ class CertificateController extends Controller
                 'qr_code' => $token,
             ]));
         } catch (Throwable $exception) {
-            if ($path !== null && $disk !== null) {
+            if ($path !== null) {
                 try {
-                    $disk->delete($path);
+                    $this->deleteCertificateFile($path);
                 } catch (Throwable $cleanupException) {
                     Log::warning('certificate.cleanup_failed', [
                         'placement_id' => $placement->id,
@@ -119,19 +116,17 @@ class CertificateController extends Controller
     {
         abort_unless(in_array(auth()->user()?->role?->name, ['Admin', 'Waka Humas'], true), 403);
 
-        $disk = null;
         $placement = null;
         $pdfBinary = '';
         $placementIsComplete = false;
 
         try {
-            $disk = Storage::disk('local');
             $certificate->loadMissing('placement.student.programKeahlian', 'placement.partner');
             $placement = $certificate->placement;
             $placementIsComplete = $placement && $placement->student && $placement->partner;
 
             if ($placementIsComplete) {
-                $pdfBinary = $disk->exists($certificate->file_path) ? $disk->get($certificate->file_path) : '';
+                $pdfBinary = $this->readCertificateFile($certificate->file_path) ?? '';
 
                 if (! str_starts_with($pdfBinary, '%PDF-')) {
                     $pdfBinary = $this->renderPdf($this->certificatePdfData(
@@ -142,7 +137,7 @@ class CertificateController extends Controller
                     ));
                     $this->ensureValidPdf($pdfBinary);
 
-                    if (! $disk->put($certificate->file_path, $pdfBinary)) {
+                    if (! $this->writeCertificateFile($certificate->file_path, $pdfBinary)) {
                         Log::warning('certificate.cache_write_failed', [
                             'certificate_id' => $certificate->id,
                             'path' => $certificate->file_path,
@@ -265,6 +260,63 @@ class CertificateController extends Controller
             'Content-Type' => 'application/pdf',
             'X-Content-Type-Options' => 'nosniff',
         ]);
+    }
+
+    private function certificateFileAbsolutePath(string $path): string
+    {
+        $normalizedPath = str_replace('\\', '/', $path);
+
+        if (! preg_match('#\Asertifikat/[A-Za-z0-9._-]+\.pdf\z#i', $normalizedPath)) {
+            throw new RuntimeException('Certificate file path is invalid.');
+        }
+
+        $root = config('filesystems.disks.local.root');
+
+        if (! is_string($root) || trim($root) === '') {
+            throw new RuntimeException('The local certificate storage path is not configured.');
+        }
+
+        $filename = substr($normalizedPath, strlen('sertifikat/'));
+
+        return rtrim($root, '/\\') . DIRECTORY_SEPARATOR . 'sertifikat' . DIRECTORY_SEPARATOR . $filename;
+    }
+
+    private function readCertificateFile(string $path): ?string
+    {
+        $absolutePath = $this->certificateFileAbsolutePath($path);
+
+        if (! is_file($absolutePath)) {
+            return null;
+        }
+
+        $contents = @file_get_contents($absolutePath);
+
+        if ($contents === false) {
+            throw new RuntimeException('The stored certificate PDF could not be read.');
+        }
+
+        return $contents;
+    }
+
+    private function writeCertificateFile(string $path, string $contents): bool
+    {
+        $absolutePath = $this->certificateFileAbsolutePath($path);
+        $directory = dirname($absolutePath);
+
+        if (! is_dir($directory) && ! @mkdir($directory, 0755, true) && ! is_dir($directory)) {
+            return false;
+        }
+
+        return @file_put_contents($absolutePath, $contents, LOCK_EX) === strlen($contents);
+    }
+
+    private function deleteCertificateFile(string $path): void
+    {
+        $absolutePath = $this->certificateFileAbsolutePath($path);
+
+        if (is_file($absolutePath) && ! @unlink($absolutePath)) {
+            throw new RuntimeException('The incomplete certificate PDF could not be removed.');
+        }
     }
 
     private function ensureValidPdf(string $pdfBinary): void
