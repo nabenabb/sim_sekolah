@@ -4,32 +4,36 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Masuk — SIM Sekolah SMKN 4</title>
-<link rel="stylesheet" href="{{ asset('css/app.css') }}">
+<link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
 </head>
 <body>
 <div class="auth-shell">
-  <div class="auth-side">
-    <div class="brand" style="border:none;padding:0;">
+  <header class="auth-brand">
       <img class="login-brand-logo" src="{{ asset('images/logo-smkn4-tanjungpinang.jpg') }}" alt="Logo SMK Negeri 4 Tanjungpinang">
-      <div class="brand-text"><div class="t1">SIM Sekolah</div><div class="t2" style="color:#8FA6BC;">SMKN 4 Tanjungpinang</div></div>
-    </div>
-    <div>
-      <div class="quote">&ldquo;Satu sistem untuk persuratan, kerja sama industri, dan sertifikat PKL &mdash; dari TU sampai Kepala Sekolah.&rdquo;</div>
-      <div class="quote-by">Sistem Informasi Manajemen Sekolah</div>
-    </div>
-    <div style="font-size:12px;color:#6C87A0;">&copy; {{ date('Y') }} SMKN 4 Tanjungpinang</div>
-  </div>
-  <div class="auth-form-wrap">
-    <div class="auth-card">
-      <h1>Masuk ke akun Anda</h1>
+      <div class="auth-brand__text">
+        <div class="auth-brand__name">SIM Sekolah</div>
+        <div class="auth-brand__school">SMKN 4 Tanjungpinang</div>
+      </div>
+  </header>
+
+  <main class="auth-form-wrap">
+    <section class="auth-card" aria-labelledby="loginTitle">
+      <div class="auth-card__mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 4H5v16h5" />
+          <path d="m13 8 4 4-4 4" />
+          <path d="M8 12h9" />
+        </svg>
+      </div>
+      <h1 id="loginTitle">Masuk ke akun Anda</h1>
       <p class="sub">Gunakan akun yang terdaftar di sekolah untuk mengakses sistem.</p>
 
       @if (session('status'))
-        <div style="background:var(--success-tint);color:var(--success);border-radius:var(--radius-control);padding:10px 14px;font-size:13px;margin-bottom:18px;">{{ session('status') }}</div>
+        <div class="auth-alert auth-alert--success" role="status">{{ session('status') }}</div>
       @endif
 
       @if ($errors->any())
-        <div style="background:var(--danger-tint);color:var(--danger);border-radius:var(--radius-control);padding:10px 14px;font-size:13px;margin-bottom:18px;">
+        <div class="auth-alert auth-alert--danger" role="alert">
           {{ $errors->first() }}
         </div>
       @endif
@@ -38,19 +42,21 @@
         @csrf
 
         <div class="field">
-          <label>Email</label>
-          <input type="email" name="email" value="{{ old('email') }}" placeholder="nama@smkn4tanjungpinang.sch.id" required autofocus autocomplete="username">
+          <label for="loginEmail">Email</label>
+          <input id="loginEmail" type="email" name="email" value="{{ old('email') }}" placeholder="nama@smkn4tanjungpinang.sch.id" required autofocus autocomplete="username">
         </div>
         <div class="field">
-          <label>Kata Sandi</label>
-          <input type="password" name="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required>
+          <label for="loginPassword">Kata Sandi</label>
+          <input id="loginPassword" type="password" name="password" placeholder="Masukkan kata sandi" required autocomplete="current-password">
         </div>
         <button type="submit" class="btn btn-primary btn-block">Masuk</button>
       </form>
 
-      <p style="font-size:12px;color:var(--ink-faint);text-align:center;margin-top:18px;">Akun baru dibuat oleh Admin melalui menu Manajemen Pengguna.</p>
-    </div>
-  </div>
+      <p class="auth-card__note">Akun baru dibuat oleh Admin melalui menu Manajemen Pengguna.</p>
+    </section>
+  </main>
+
+  <footer class="auth-footer">&copy; {{ date('Y') }} SMKN 4 Tanjungpinang</footer>
 </div>
 </body>
 </html>
