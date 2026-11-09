@@ -109,13 +109,17 @@ button{ font-family: inherit; }
 .brand-logo{
   width:46px;
   height:46px;
+  display:block;
   object-fit:contain;
+  object-position:center;
   flex:none;
 }
 .login-brand-logo{
   width:46px;
   height:46px;
+  display:block;
   object-fit:contain;
+  object-position:center;
   flex:none;
 }
 .brand-text{ min-width:0; line-height:1.25; }
@@ -745,7 +749,7 @@ tbody tr.selected{ background: var(--primary-tint); }
 .certificate-preview-card{ overflow:hidden; border:1px solid var(--border); border-radius:10px; background:var(--surface); box-shadow:var(--shadow-card); }
 .certificate-preview-card__header{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 15px; background:var(--primary-dark); color:#fff; font-size:10px; }
 .certificate-preview-card__header strong{ display:block; margin-top:4px; font-size:12px; }
-.certificate-preview-card__header img{ width:38px; height:44px; flex:none; object-fit:contain; }
+.certificate-preview-card__header img{ width:38px; height:44px; flex:none; object-fit:contain; object-position:center; }
 .certificate-preview-card__details{ padding:14px 15px; }
 .certificate-preview-card__details .info-row{ gap:10px; padding:7px 0; font-size:11px; }
 .certificate-preview-card__details .k{ flex:0 0 68px; }

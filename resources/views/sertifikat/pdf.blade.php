@@ -12,7 +12,7 @@
   .corner-bottom { position: absolute; bottom: 0; left: 0; width: 0; height: 0; border-bottom: 220px solid #12b6da; border-right: 220px solid transparent; }
   .corner-bottom-light { position: absolute; bottom: 0; left: 0; width: 0; height: 0; border-bottom: 145px solid #a8e9f3; border-right: 145px solid transparent; }
   .watermark { position: absolute; top: 260px; left: 50%; width: 245px; height: 245px; margin-left: -122px; opacity: .10; }
-  .logo { position: absolute; top: 44px; width: 112px; height: 112px; object-fit: contain; }
+  .logo { position: absolute; top: 44px; width: 112px; height: 112px; object-fit: contain; object-position: center; }
   .logo-left { left: 74px; }
   .logo-right { right: 74px; }
   .title { position: absolute; top: 28px; left: 0; width: 100%; text-align: center; font-family: 'DejaVu Serif', serif; font-size: 76px; line-height: 1.2; }

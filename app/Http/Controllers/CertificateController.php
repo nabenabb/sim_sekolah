@@ -258,7 +258,12 @@ class CertificateController extends Controller
             throw new RuntimeException('Certificate logo could not be read: ' . $filename);
         }
 
-        return 'data:image/png;base64,' . base64_encode($contents);
+        $mimeType = match (strtolower(pathinfo($filename, PATHINFO_EXTENSION))) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            default => 'image/png',
+        };
+
+        return 'data:' . $mimeType . ';base64,' . base64_encode($contents);
     }
 
     /**
@@ -275,7 +280,7 @@ class CertificateController extends Controller
             'qrDataUri' => 'data:image/svg+xml;base64,' . base64_encode($this->makeQrSvg(route('sertifikat.verify', $token))),
             'namaKepsek' => $kepalaSekolah->name ?? '______________________',
             'logoProvinsi' => $this->logoDataUri('logo-provinsi-kepulauan-riau.png'),
-            'logoSekolah' => $this->logoDataUri('logo-smkn4-tanjungpinang.png'),
+            'logoSekolah' => $this->logoDataUri('logo-smkn4-tanjungpinang.jpg'),
         ];
     }
 

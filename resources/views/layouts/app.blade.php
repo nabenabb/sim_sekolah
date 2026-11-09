@@ -20,7 +20,7 @@
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
-      <img class="brand-logo" src="{{ asset('images/logo-smkn4-tanjungpinang.png') }}" alt="Logo SMKN 4 Tanjungpinang">
+      <img class="brand-logo" src="{{ asset('images/logo-smkn4-tanjungpinang.jpg') }}" alt="Logo SMKN 4 Tanjungpinang">
       <div class="brand-text"><div class="t1">SIM Sekolah</div><div class="t2">SMKN 4 Tanjungpinang</div></div>
     </div>
     <nav class="nav-group">

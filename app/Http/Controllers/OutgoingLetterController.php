@@ -242,7 +242,7 @@ class OutgoingLetterController extends Controller
             'data' => $letter->data_template ?? [],
             'namaKepsek' => $letter->signer?->name ?? $kepsek->name ?? '______________________',
             'logoProvinsi' => $this->logoDataUri('logo-provinsi-kepulauan-riau.png'),
-            'logoSekolah' => $this->logoDataUri('logo-smkn4-tanjungpinang.png'),
+            'logoSekolah' => $this->logoDataUri('logo-smkn4-tanjungpinang.jpg'),
         ])->render());
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
@@ -252,7 +252,19 @@ class OutgoingLetterController extends Controller
 
     private function logoDataUri(string $filename): string
     {
-        return 'data:image/png;base64,' . base64_encode(file_get_contents(public_path('images/' . $filename)));
+        $path = public_path('images/' . $filename);
+        $contents = file_get_contents($path);
+
+        if ($contents === false) {
+            throw new \RuntimeException('Document logo could not be read: ' . $filename);
+        }
+
+        $mimeType = match (strtolower(pathinfo($filename, PATHINFO_EXTENSION))) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            default => 'image/png',
+        };
+
+        return 'data:' . $mimeType . ';base64,' . base64_encode($contents);
     }
 
     public function destroy(OutgoingLetter $letter)

@@ -70,7 +70,7 @@
           <div class="certificate-preview-card">
             <div class="certificate-preview-card__header">
               <div><div>SMKN 4 Tanjungpinang</div><strong>Sertifikat Praktik Kerja Lapangan</strong></div>
-              <img src="{{ asset('images/logo-smkn4-tanjungpinang.png') }}" alt="Logo SMKN 4 Tanjungpinang">
+              <img src="{{ asset('images/logo-smkn4-tanjungpinang.jpg') }}" alt="Logo SMKN 4 Tanjungpinang">
             </div>
             <div class="certificate-preview-card__details">
               <div class="info-row"><span class="k">Nama</span><span class="v" id="p-nama">—</span></div>
