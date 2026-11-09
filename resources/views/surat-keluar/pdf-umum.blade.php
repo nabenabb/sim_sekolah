@@ -9,8 +9,8 @@
   table { border-collapse: collapse; }
   .letterhead { width: 100%; }
   .letterhead td { vertical-align: middle; }
-  .logo-cell { width: 86px; text-align: center; }
-  .logo { display: block; width: auto; height: 72px; margin: 0 auto; }
+  .logo-cell { width: 102px; text-align: center; }
+  .logo { display: block; width: auto; max-width: 100%; height: 92px; object-fit: contain; object-position: center; margin: 0 auto; }
   .school { text-align: center; font-family: 'DejaVu Serif', serif; color: #111; }
   .school .province { font-size: 12px; font-weight: bold; }
   .school .office { margin-top: 2px; font-size: 13px; font-weight: bold; }
