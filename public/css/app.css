@@ -391,10 +391,13 @@ tbody tr.selected{ background: var(--primary-tint); }
   display:grid;
   grid-template-rows:auto 1fr auto;
   padding:26px clamp(18px, 4vw, 56px) 18px;
-  background:
-    radial-gradient(ellipse 460px 340px at 78% 18%, rgba(245,180,0,0.15), transparent 72%),
-    radial-gradient(ellipse 520px 440px at 12% 88%, rgba(37,96,145,0.35), transparent 72%),
-    linear-gradient(135deg, #071626 0%, var(--primary-dark) 52%, #12395E 100%);
+  background-color:var(--primary-dark);
+  background-image:
+    linear-gradient(125deg, rgba(11,31,51,0.32), rgba(11,31,51,0.08) 55%, rgba(11,31,51,0.2)),
+    url("../images/login-background.jpg");
+  background-position:center;
+  background-size:cover;
+  background-repeat:no-repeat;
 }
 .auth-shell::before,
 .auth-shell::after{
@@ -410,6 +413,7 @@ tbody tr.selected{ background: var(--primary-tint); }
   right:-15%;
   border:1px solid rgba(207,228,245,0.15);
   border-radius:50%;
+  opacity:0.34;
   box-shadow:
     0 0 0 34px rgba(207,228,245,0.025),
     0 0 0 35px rgba(207,228,245,0.075),
@@ -421,7 +425,7 @@ tbody tr.selected{ background: var(--primary-tint); }
   bottom:8%;
   width:210px;
   height:150px;
-  opacity:0.28;
+  opacity:0.18;
   background-image:radial-gradient(rgba(245,180,0,0.9) 1px, transparent 1.5px);
   background-size:18px 18px;
   mask-image:radial-gradient(ellipse at center, #000 8%, transparent 74%);
